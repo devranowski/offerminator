@@ -83,7 +83,10 @@ export type SuccessfulCurrencyResultContract = Expect<
   Equal<Extract<CurrencyConversionResult, { ok: true }>['usdCents'], number>
 >;
 export type FailedCurrencyReasonContract = Expect<
-  Equal<Extract<CurrencyConversionResult, { ok: false }>['reason'], 'unsupported-currency'>
+  Equal<
+    Extract<CurrencyConversionResult, { ok: false }>['reason'],
+    'unsupported-currency' | 'amount-out-of-range'
+  >
 >;
 export type FailedCurrencyCodeContract = Expect<
   Equal<Extract<CurrencyConversionResult, { ok: false }>['currency'], string>
