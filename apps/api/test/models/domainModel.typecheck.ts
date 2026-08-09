@@ -1,22 +1,25 @@
-import type {
-  ApprovalDecision,
-  ApprovedJob,
-  ApprovedLocation,
-  ApprovedSalary,
-  CountryCode,
-  CurrencyConversionResult,
-  HourlySalary,
-  InPersonJobLocation,
-  IsoDate,
-  JobLocation,
-  NonEmptyString,
-  NormalizationWarning,
-  NormalizedJobCandidate,
-  RejectedJob,
-  RejectionReason,
-  Salary,
-  UnknownSalary,
-  UnknownSalaryReason,
+import {
+  createCountryCode,
+  isApprovedInPersonCountry,
+  type ApprovalDecision,
+  type ApprovedInPersonCountryCode,
+  type ApprovedJob,
+  type ApprovedLocation,
+  type ApprovedSalary,
+  type CountryCode,
+  type CurrencyConversionResult,
+  type HourlySalary,
+  type InPersonJobLocation,
+  type IsoDate,
+  type JobLocation,
+  type NonEmptyString,
+  type NormalizationWarning,
+  type NormalizedJobCandidate,
+  type RejectedJob,
+  type RejectionReason,
+  type Salary,
+  type UnknownSalary,
+  type UnknownSalaryReason,
 } from '../../src/models/index.js';
 
 type Equal<Left, Right> =
@@ -89,9 +92,16 @@ export type FailedCurrencyCodeContract = Expect<
 declare const nonEmptyString: NonEmptyString;
 declare const isoDate: IsoDate;
 declare const countryCode: CountryCode;
-declare const usCountryCode: CountryCode & 'US';
 declare const gbCountryCode: CountryCode & 'GB';
 declare const deCountryCode: CountryCode & 'DE';
+
+const usCountryCode = createCountryCode('US');
+
+if (usCountryCode === null || !isApprovedInPersonCountry(usCountryCode)) {
+  throw new Error('Expected US to be an approved in-person country code.');
+}
+
+const approvedCountry: ApprovedInPersonCountryCode = usCountryCode;
 
 const plainString: string = nonEmptyString;
 void plainString;
@@ -138,7 +148,7 @@ const usInPersonLocation = {
   kind: 'in-person',
   city: 'Austin',
   region: 'TX',
-  country: usCountryCode,
+  country: approvedCountry,
   raw: null,
 } satisfies ApprovedLocation;
 

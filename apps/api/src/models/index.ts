@@ -12,6 +12,7 @@ export type {
   EmploymentType,
   JobLanguage,
 } from './jobEnums.js';
+export { isApprovedInPersonCountry } from './location.js';
 export type {
   ApprovedInPersonCountryCode,
   ApprovedInPersonLocation,
