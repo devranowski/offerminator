@@ -1,4 +1,4 @@
-export type NormalizationWarningCode = 'INVALID_POSTING_DATE' | 'SUSPICIOUS_ANNUAL_SALARY';
+export type NormalizationWarningCode = 'INVALID_POSTING_DATE';
 
 export interface NormalizationWarning {
   readonly code: NormalizationWarningCode;

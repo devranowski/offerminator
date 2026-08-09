@@ -21,6 +21,15 @@ describe('normalizeSalary', () => {
     });
   });
 
+  it('defaults an explicitly undefined unit to annual', () => {
+    expect(normalizeSalary({ value: 145_000, currency: 'USD', unit: undefined })).toEqual({
+      kind: 'annual',
+      amount: 145_000,
+      currency: 'USD',
+      source: 'explicit',
+    });
+  });
+
   it('normalizes an explicit annual unit case-insensitively after trimming', () => {
     expect(normalizeSalary({ value: 85_000, currency: ' GBP ', unit: ' Annual ' })).toEqual({
       kind: 'annual',
@@ -34,6 +43,15 @@ describe('normalizeSalary', () => {
     expect(normalizeSalary({ value: 65, currency: 'USD', unit: ' HOURLY ' })).toEqual({
       kind: 'hourly',
       amount: 65,
+      currency: 'USD',
+      source: 'explicit',
+    });
+  });
+
+  it.each(['usd', ' USD ', 'Usd'])('canonicalizes currency %j to uppercase', (currency) => {
+    expect(normalizeSalary({ value: 100, currency })).toEqual({
+      kind: 'annual',
+      amount: 100,
       currency: 'USD',
       source: 'explicit',
     });
@@ -85,6 +103,7 @@ describe('normalizeSalary', () => {
   it.each([
     { value: 120_000, currency: 'USD', unit: 'monthly' },
     { value: 120_000, currency: 'USD', unit: '' },
+    { value: 120_000, currency: 'USD', unit: '   ' },
     { value: 120_000, currency: 'USD', unit: null },
     { value: 120_000, currency: 'USD', unit: 12 },
   ])('maps invalid unit in %j to reason invalid-unit', (value) => {
@@ -96,7 +115,7 @@ describe('normalizeSalary', () => {
   });
 
   it('preserves an unsupported currency for the currency converter', () => {
-    expect(normalizeSalary({ value: 120_000, currency: 'XYZ' })).toEqual({
+    expect(normalizeSalary({ value: 120_000, currency: ' xyz ' })).toEqual({
       kind: 'annual',
       amount: 120_000,
       currency: 'XYZ',

@@ -24,7 +24,7 @@ export function normalizeSalary(value: unknown): Salary {
   }
 
   const amount = value['value'];
-  const currency = normalizeOptionalString(value['currency']);
+  const currency = normalizeOptionalString(value['currency'])?.toUpperCase() ?? null;
 
   if (currency === null) {
     return unknownSalary('missing-currency', value);
