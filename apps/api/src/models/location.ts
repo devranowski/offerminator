@@ -28,14 +28,14 @@ export type JobLocation = RemoteJobLocation | InPersonJobLocation | UnknownJobLo
 
 export type ApprovedInPersonCountryCode = CountryCode & ('US' | 'CA');
 
-export function isApprovedInPersonCountry(
-  value: CountryCode,
-): value is ApprovedInPersonCountryCode {
-  return value === 'US' || value === 'CA';
-}
-
 export type ApprovedInPersonLocation = Omit<InPersonJobLocation, 'country'> & {
   readonly country: ApprovedInPersonCountryCode;
 };
 
 export type ApprovedLocation = RemoteJobLocation | ApprovedInPersonLocation;
+
+function isApprovedInPersonCountry(value: CountryCode): value is ApprovedInPersonCountryCode {
+  return value === 'US' || value === 'CA';
+}
+
+export { isApprovedInPersonCountry };

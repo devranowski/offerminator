@@ -12,6 +12,26 @@ import { IngestionService } from './ingestionService.js';
 import type { JobRejectedLogEvent, JobRejectionLogger } from './jobRejectionLogger.js';
 import type { JobSourceLoader, SourceLoadResult } from './jobSourceLoader.js';
 
+class StaticJobSourceLoader implements JobSourceLoader {
+  readonly loadedPaths: string[][] = [];
+
+  constructor(private readonly results: readonly SourceLoadResult[]) {}
+
+  loadSources(paths: readonly string[]): Promise<readonly SourceLoadResult[]> {
+    this.loadedPaths.push([...paths]);
+    return Promise.resolve(this.results);
+  }
+}
+
+class RecordingJobRejectionLogger implements JobRejectionLogger {
+  readonly events: JobRejectedLogEvent[] = [];
+
+  async logJobRejected(event: JobRejectedLogEvent): Promise<void> {
+    await Promise.resolve();
+    this.events.push(event);
+  }
+}
+
 describe('IngestionService', () => {
   it('summarizes successful sources, isolates source errors, and retains the latest summary', async () => {
     const approvedRecord = createRawJob();
@@ -150,7 +170,7 @@ describe('IngestionService', () => {
       sourceLoader,
       sourcePaths: ['/input/synthetic.json'],
       approvalPolicy: {
-        evaluate(candidate) {
+        evaluate: (candidate) => {
           if (candidate.sourceIndex === 0) {
             throw processingError;
           }
@@ -214,7 +234,7 @@ describe('IngestionService', () => {
   it('preserves record order across asynchronous storage writes', async () => {
     const storageOrder: string[] = [];
     const approvedJobs: ApprovedJobRepository = {
-      async save(job: ApprovedJob): Promise<void> {
+      save: async (job: ApprovedJob): Promise<void> => {
         storageOrder.push(`start:${job.id}`);
         await Promise.resolve();
         storageOrder.push(`end:${job.id}`);
@@ -300,7 +320,7 @@ describe('IngestionService', () => {
     const storageError = new Error('Synthetic storage failure.');
     const savedJobIds: string[] = [];
     const approvedJobs: ApprovedJobRepository = {
-      save(job) {
+      save: (job) => {
         if (savedJobIds.length === 1) {
           return Promise.reject(storageError);
         }
@@ -364,26 +384,6 @@ describe('IngestionService', () => {
     expect(service.getLastSummary()).toBeNull();
   });
 });
-
-class StaticJobSourceLoader implements JobSourceLoader {
-  readonly loadedPaths: string[][] = [];
-
-  constructor(private readonly results: readonly SourceLoadResult[]) {}
-
-  loadSources(paths: readonly string[]): Promise<readonly SourceLoadResult[]> {
-    this.loadedPaths.push([...paths]);
-    return Promise.resolve(this.results);
-  }
-}
-
-class RecordingJobRejectionLogger implements JobRejectionLogger {
-  readonly events: JobRejectedLogEvent[] = [];
-
-  async logJobRejected(event: JobRejectedLogEvent): Promise<void> {
-    await Promise.resolve();
-    this.events.push(event);
-  }
-}
 
 function createApprovalPolicy(): ApprovalPolicy {
   return new ApprovalPolicy({

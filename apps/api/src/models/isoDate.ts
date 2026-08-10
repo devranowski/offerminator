@@ -6,7 +6,7 @@ export type IsoDate = string & {
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/u;
 
-export function createIsoDate(value: string): IsoDate | null {
+function createIsoDate(value: string): IsoDate | null {
   if (!ISO_DATE_PATTERN.test(value)) {
     return null;
   }
@@ -37,3 +37,5 @@ function daysInMonth(year: number, month: number): number {
 function isLeapYear(year: number): boolean {
   return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
 }
+
+export { createIsoDate };

@@ -2,7 +2,7 @@ import type { IngestionSummaryDto } from '@offerminator/api-contracts';
 
 import type { IngestionSummary } from '../../ingestion/ingestionSummary.js';
 
-export function toIngestionSummaryDto(summary: IngestionSummary): IngestionSummaryDto {
+function toIngestionSummaryDto(summary: IngestionSummary): IngestionSummaryDto {
   return {
     totalSources: summary.totalSources,
     successfulSources: summary.successfulSources,
@@ -23,3 +23,5 @@ export function toIngestionSummaryDto(summary: IngestionSummary): IngestionSumma
     })),
   };
 }
+
+export { toIngestionSummaryDto };

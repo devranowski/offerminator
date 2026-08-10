@@ -10,7 +10,7 @@ export interface IngestionSummaryRoutesDependencies {
   readonly ingestionService: Pick<IngestionService, 'getLastSummary'>;
 }
 
-export function registerIngestionSummaryRoutes(
+function registerIngestionSummaryRoutes(
   app: FastifyInstance,
   dependencies: IngestionSummaryRoutesDependencies,
 ): void {
@@ -35,3 +35,5 @@ export function registerIngestionSummaryRoutes(
     },
   );
 }
+
+export { registerIngestionSummaryRoutes };

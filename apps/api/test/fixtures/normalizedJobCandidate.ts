@@ -1,7 +1,7 @@
 import { createCountryCode, type CountryCode } from '../../src/models/countryCode.js';
 import type { NormalizedJobCandidate } from '../../src/models/normalizedJob.js';
 
-export function createNormalizedJobCandidate(
+function createNormalizedJobCandidate(
   overrides: Partial<NormalizedJobCandidate> = {},
 ): NormalizedJobCandidate {
   return {
@@ -34,7 +34,7 @@ export function createNormalizedJobCandidate(
   };
 }
 
-export function requiredCountryCode(value: string): CountryCode {
+function requiredCountryCode(value: string): CountryCode {
   const country = createCountryCode(value);
 
   if (country === null) {
@@ -43,3 +43,5 @@ export function requiredCountryCode(value: string): CountryCode {
 
   return country;
 }
+
+export { createNormalizedJobCandidate, requiredCountryCode };

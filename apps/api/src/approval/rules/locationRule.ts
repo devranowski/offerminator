@@ -1,7 +1,7 @@
 import { isApprovedInPersonCountry } from '../../models/location.js';
 import type { ApprovalRule } from '../approvalContext.js';
 
-export const locationRule: ApprovalRule = (job) => {
+const locationRule: ApprovalRule = (job) => {
   const { location } = job;
 
   if (location.kind === 'remote') {
@@ -43,3 +43,5 @@ export const locationRule: ApprovalRule = (job) => {
 
   return [];
 };
+
+export { locationRule };

@@ -1,6 +1,6 @@
 import type { ApprovalRule } from '../approvalContext.js';
 
-export const companyTypeRule: ApprovalRule = (job) => {
+const companyTypeRule: ApprovalRule = (job) => {
   if (job.companyType === 'direct-employer' || job.companyType === 'consulting-agency') {
     return [];
   }
@@ -25,3 +25,5 @@ export const companyTypeRule: ApprovalRule = (job) => {
     },
   ];
 };
+
+export { companyTypeRule };

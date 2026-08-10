@@ -34,10 +34,12 @@ const ISO_COUNTRY_CODES = new Set(
   ].flatMap((codes) => codes.split(' ')),
 );
 
-export function createCountryCode(value: string): CountryCode | null {
+function createCountryCode(value: string): CountryCode | null {
   if (!ISO_COUNTRY_CODES.has(value)) {
     return null;
   }
 
   return value as CountryCode;
 }
+
+export { createCountryCode };

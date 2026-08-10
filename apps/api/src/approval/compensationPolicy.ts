@@ -35,7 +35,7 @@ export class DefaultCompensationPolicy implements CompensationPolicy {
   }
 }
 
-export function meetsCompensationThreshold(
+function meetsCompensationThreshold(
   amountUsdCents: number,
   threshold: CompensationThreshold,
 ): boolean {
@@ -43,3 +43,5 @@ export function meetsCompensationThreshold(
     ? amountUsdCents > threshold.amountUsdCents
     : amountUsdCents >= threshold.amountUsdCents;
 }
+
+export { meetsCompensationThreshold };

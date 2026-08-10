@@ -26,6 +26,18 @@ import {
 import { JobSearchService } from './jobSearchService.js';
 import type { JobSort } from './searchQuery.js';
 
+interface TestApprovedJobOptions {
+  readonly id: string;
+  readonly title: string;
+  readonly description?: string;
+  readonly company?: string;
+  readonly country?: CountryCode | null;
+  readonly salary?: ApprovedSalary;
+  readonly postingDate?: IsoDate | null;
+  readonly salaryUsdCents?: number;
+  readonly annualizedSalaryUsdCents?: number;
+}
+
 const defaultFixtureOrder = [
   'Customer Success Manager',
   'Cybersecurity Specialist',
@@ -304,18 +316,6 @@ describe('JobSearchService', () => {
     expect(results).not.toBe(repositoryCollection);
   });
 });
-
-interface TestApprovedJobOptions {
-  readonly id: string;
-  readonly title: string;
-  readonly description?: string;
-  readonly company?: string;
-  readonly country?: CountryCode | null;
-  readonly salary?: ApprovedSalary;
-  readonly postingDate?: IsoDate | null;
-  readonly salaryUsdCents?: number;
-  readonly annualizedSalaryUsdCents?: number;
-}
 
 function createTestApprovedJob(options: TestApprovedJobOptions): ApprovedJob {
   const salaryUsdCents = options.salaryUsdCents ?? 12_000_000;

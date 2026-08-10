@@ -3,17 +3,6 @@ import type { JobLocation } from '../models/location.js';
 
 import { normalizeOptionalString } from './normalizeString.js';
 
-const COUNTRY_ALIASES: Readonly<Record<string, string>> = {
-  usa: 'US',
-  us: 'US',
-  'united states': 'US',
-  canada: 'CA',
-  uk: 'GB',
-  'united kingdom': 'GB',
-  germany: 'DE',
-  ireland: 'IE',
-};
-
 type ParsedLocation =
   | {
       readonly signal: 'none';
@@ -34,6 +23,17 @@ type ParsedLocation =
       readonly country: CountryCode | null;
     };
 
+const COUNTRY_ALIASES: Readonly<Record<string, string>> = {
+  usa: 'US',
+  us: 'US',
+  'united states': 'US',
+  canada: 'CA',
+  uk: 'GB',
+  'united kingdom': 'GB',
+  germany: 'DE',
+  ireland: 'IE',
+};
+
 const NO_LOCATION: ParsedLocation = {
   signal: 'none',
   city: null,
@@ -47,6 +47,34 @@ const REMOTE_LOCATION: ParsedLocation = {
   region: null,
   country: null,
 };
+
+function normalizeLocation(value: unknown, remote: unknown): JobLocation {
+  const parsedLocation = parseLocation(value);
+
+  if (remote === true) {
+    return createKnownLocation('remote', parsedLocation, value);
+  }
+
+  if (remote === false) {
+    return createKnownLocation('in-person', parsedLocation, value);
+  }
+
+  if (parsedLocation.signal === 'remote') {
+    return createKnownLocation('remote', parsedLocation, value);
+  }
+
+  if (parsedLocation.signal === 'physical') {
+    return createKnownLocation('in-person', parsedLocation, value);
+  }
+
+  return {
+    kind: 'unknown',
+    city: null,
+    region: null,
+    country: null,
+    raw: value,
+  };
+}
 
 function resolveCountry(value: string | null): CountryCode | null {
   if (value === null) {
@@ -133,34 +161,6 @@ function parseLocation(value: unknown): ParsedLocation {
   return NO_LOCATION;
 }
 
-export function normalizeLocation(value: unknown, remote: unknown): JobLocation {
-  const parsedLocation = parseLocation(value);
-
-  if (remote === true) {
-    return createKnownLocation('remote', parsedLocation, value);
-  }
-
-  if (remote === false) {
-    return createKnownLocation('in-person', parsedLocation, value);
-  }
-
-  if (parsedLocation.signal === 'remote') {
-    return createKnownLocation('remote', parsedLocation, value);
-  }
-
-  if (parsedLocation.signal === 'physical') {
-    return createKnownLocation('in-person', parsedLocation, value);
-  }
-
-  return {
-    kind: 'unknown',
-    city: null,
-    region: null,
-    country: null,
-    raw: value,
-  };
-}
-
 function createKnownLocation(
   kind: 'remote' | 'in-person',
   parsedLocation: ParsedLocation,
@@ -174,3 +174,5 @@ function createKnownLocation(
     raw,
   };
 }
+
+export { normalizeLocation };

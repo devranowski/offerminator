@@ -1,6 +1,6 @@
 import type { ApprovalRule } from '../approvalContext.js';
 
-export const titleRule: ApprovalRule = (job) => {
+const titleRule: ApprovalRule = (job) => {
   if (job.title !== null && job.title.trim().length > 0) {
     return [];
   }
@@ -14,3 +14,5 @@ export const titleRule: ApprovalRule = (job) => {
     },
   ];
 };
+
+export { titleRule };

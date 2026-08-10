@@ -1,7 +1,5 @@
 import type { ApprovedSalary } from '../models/salary.js';
 
-export const HOURS_PER_YEAR = 2_080;
-
 export type SalaryAnnualizationResult =
   | {
       readonly ok: true;
@@ -12,7 +10,9 @@ export type SalaryAnnualizationResult =
       readonly reason: 'amount-out-of-range';
     };
 
-export function annualizeSalaryUsdCents(
+export const HOURS_PER_YEAR = 2_080;
+
+function annualizeSalaryUsdCents(
   amountUsdCents: number,
   salaryKind: ApprovedSalary['kind'],
 ): SalaryAnnualizationResult {
@@ -23,3 +23,5 @@ export function annualizeSalaryUsdCents(
     ? { ok: true, annualizedSalaryUsdCents }
     : { ok: false, reason: 'amount-out-of-range' };
 }
+
+export { annualizeSalaryUsdCents };

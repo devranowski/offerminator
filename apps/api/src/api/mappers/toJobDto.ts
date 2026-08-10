@@ -2,7 +2,7 @@ import type { JobDto } from '@offerminator/api-contracts';
 
 import type { ApprovedJob } from '../../models/approvedJob.js';
 
-export function toJobDto(job: ApprovedJob): JobDto {
+function toJobDto(job: ApprovedJob): JobDto {
   return {
     id: job.id,
     title: job.title,
@@ -24,3 +24,5 @@ export function toJobDto(job: ApprovedJob): JobDto {
     postingDate: job.postingDate,
   };
 }
+
+export { toJobDto };

@@ -2,11 +2,11 @@ import type { Logger } from 'pino';
 
 import type { JobRejectedLogEvent, JobRejectionLogger } from '../ingestion/jobRejectionLogger.js';
 
-const MAX_PROCESSING_ERROR_MESSAGE_LENGTH = 1_024;
-const TRUNCATED_MESSAGE_SUFFIX = '… [truncated]';
-
 type ProcessingErrorDescription =
   { readonly name: string; readonly message: string } | { readonly type: string };
+
+const MAX_PROCESSING_ERROR_MESSAGE_LENGTH = 1_024;
+const TRUNCATED_MESSAGE_SUFFIX = '… [truncated]';
 
 export class PinoJobRejectionLogger implements JobRejectionLogger {
   constructor(private readonly logger: Pick<Logger, 'info'>) {}

@@ -28,6 +28,13 @@ export type Utf8FileReader = (path: string) => Promise<string>;
 
 const nodeUtf8FileReader: Utf8FileReader = (path) => readFile(path, 'utf8');
 
+const sourceErrorMessages = {
+  FILE_NOT_FOUND: 'Source file was not found.',
+  INVALID_JSON: 'Source file does not contain valid JSON.',
+  ROOT_NOT_ARRAY: 'Source JSON root must be an array.',
+  READ_ERROR: 'Source file could not be read.',
+} satisfies Record<SourceErrorCode, string>;
+
 export class FileSystemJobSourceLoader implements JobSourceLoader {
   constructor(private readonly readUtf8File: Utf8FileReader = nodeUtf8FileReader) {}
 
@@ -58,13 +65,6 @@ export class FileSystemJobSourceLoader implements JobSourceLoader {
       : sourceFailure(source, 'ROOT_NOT_ARRAY');
   }
 }
-
-const sourceErrorMessages = {
-  FILE_NOT_FOUND: 'Source file was not found.',
-  INVALID_JSON: 'Source file does not contain valid JSON.',
-  ROOT_NOT_ARRAY: 'Source JSON root must be an array.',
-  READ_ERROR: 'Source file could not be read.',
-} satisfies Record<SourceErrorCode, string>;
 
 function sourceFailure(source: string, code: SourceErrorCode): SourceLoadResult {
   return {

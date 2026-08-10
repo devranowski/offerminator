@@ -1,7 +1,7 @@
 import { hasZodFastifySchemaValidationErrors } from '@fastify/type-provider-zod';
 import type { FastifyInstance } from 'fastify';
 
-export function registerErrorHandler(app: FastifyInstance): void {
+function registerErrorHandler(app: FastifyInstance): void {
   app.setErrorHandler((error, request, reply) => {
     if (hasZodFastifySchemaValidationErrors(error)) {
       return reply.status(400).send({
@@ -20,3 +20,5 @@ export function registerErrorHandler(app: FastifyInstance): void {
     });
   });
 }
+
+export { registerErrorHandler };

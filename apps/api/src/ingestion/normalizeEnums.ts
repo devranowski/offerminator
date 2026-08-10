@@ -1,7 +1,7 @@
 import type { CompanyType, EmploymentType, JobLanguage } from '../models/jobEnums.js';
 import { normalizeOptionalString } from './normalizeString.js';
 
-export function normalizeEmploymentType(value: unknown): EmploymentType {
+function normalizeEmploymentType(value: unknown): EmploymentType {
   switch (normalizeEnumValue(value)) {
     case 'full-time':
       return 'full-time';
@@ -16,7 +16,7 @@ export function normalizeEmploymentType(value: unknown): EmploymentType {
   }
 }
 
-export function normalizeCompanyType(value: unknown): CompanyType {
+function normalizeCompanyType(value: unknown): CompanyType {
   switch (normalizeEnumValue(value)) {
     case 'direct employer':
       return 'direct-employer';
@@ -29,7 +29,7 @@ export function normalizeCompanyType(value: unknown): CompanyType {
   }
 }
 
-export function normalizeLanguage(value: unknown): JobLanguage {
+function normalizeLanguage(value: unknown): JobLanguage {
   const normalized = normalizeEnumValue(value);
 
   if (normalized === null) {
@@ -49,3 +49,5 @@ export function normalizeLanguage(value: unknown): JobLanguage {
 function normalizeEnumValue(value: unknown): string | null {
   return normalizeOptionalString(value)?.toLowerCase() ?? null;
 }
+
+export { normalizeCompanyType, normalizeEmploymentType, normalizeLanguage };

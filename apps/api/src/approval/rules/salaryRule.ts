@@ -5,7 +5,7 @@ import type { ApprovalRule } from '../approvalContext.js';
 import { meetsCompensationThreshold } from '../compensationPolicy.js';
 import { annualizeSalaryUsdCents, type SalaryAnnualizationResult } from '../salaryAnnualizer.js';
 
-export const salaryRule: ApprovalRule = (job, context) => {
+const salaryRule: ApprovalRule = (job, context) => {
   const salary = job.salary;
 
   if (salary.kind === 'unknown') {
@@ -112,3 +112,5 @@ function belowThresholdRejection(
 function assertNever(value: never): never {
   throw new Error(`Unhandled salary calculation failure: ${JSON.stringify(value)}`);
 }
+
+export { salaryRule };

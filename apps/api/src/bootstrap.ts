@@ -20,7 +20,13 @@ export interface ApplicationDependencies extends AppDependencies {
   readonly ingestionService: IngestionService;
 }
 
-export function createDependencies(
+export interface StartApplicationOptions {
+  readonly app: Pick<FastifyInstance, 'listen'>;
+  readonly ingestionService: Pick<IngestionService, 'ingestConfiguredSources'>;
+  readonly config: AppConfig;
+}
+
+function createDependencies(
   config: AppConfig,
   logger: JobRejectionLogger,
 ): ApplicationDependencies {
@@ -50,16 +56,12 @@ export function createDependencies(
   };
 }
 
-export interface StartApplicationOptions {
-  readonly app: Pick<FastifyInstance, 'listen'>;
-  readonly ingestionService: Pick<IngestionService, 'ingestConfiguredSources'>;
-  readonly config: AppConfig;
-}
-
-export async function startApplication(options: StartApplicationOptions): Promise<void> {
+async function startApplication(options: StartApplicationOptions): Promise<void> {
   await options.ingestionService.ingestConfiguredSources();
   await options.app.listen({
     host: options.config.host,
     port: options.config.port,
   });
 }
+
+export { createDependencies, startApplication };

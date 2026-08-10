@@ -14,7 +14,7 @@ import { normalizeOptionalString } from './normalizeString.js';
 
 const rawRecordSchema = z.record(z.string(), z.unknown());
 
-export function normalizeJob(envelope: RawJobEnvelope): NormalizedJobCandidate | null {
+function normalizeJob(envelope: RawJobEnvelope): NormalizedJobCandidate | null {
   const parsedPayload = rawRecordSchema.safeParse(envelope.payload);
 
   if (!parsedPayload.success) {
@@ -41,3 +41,5 @@ export function normalizeJob(envelope: RawJobEnvelope): NormalizedJobCandidate |
     raw: envelope.payload,
   };
 }
+
+export { normalizeJob };

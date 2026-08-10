@@ -13,6 +13,14 @@ import { IngestionService } from './ingestionService.js';
 import type { JobRejectedLogEvent, JobRejectionLogger } from './jobRejectionLogger.js';
 import { FileSystemJobSourceLoader } from './jobSourceLoader.js';
 
+class RecordingJobRejectionLogger implements JobRejectionLogger {
+  readonly events: JobRejectedLogEvent[] = [];
+
+  logJobRejected(event: JobRejectedLogEvent): void {
+    this.events.push(event);
+  }
+}
+
 const expectedApprovedTitles = [
   'Backend Engineer',
   'Machine Learning Engineer',
@@ -157,11 +165,3 @@ describe('full ingestion pipeline', () => {
     expect(logger.events).toHaveLength(10);
   });
 });
-
-class RecordingJobRejectionLogger implements JobRejectionLogger {
-  readonly events: JobRejectedLogEvent[] = [];
-
-  logJobRejected(event: JobRejectedLogEvent): void {
-    this.events.push(event);
-  }
-}

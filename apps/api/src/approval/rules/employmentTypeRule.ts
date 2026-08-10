@@ -1,6 +1,6 @@
 import type { ApprovalRule } from '../approvalContext.js';
 
-export const employmentTypeRule: ApprovalRule = (job) => {
+const employmentTypeRule: ApprovalRule = (job) => {
   if (job.employmentType === 'full-time') {
     return [];
   }
@@ -25,3 +25,5 @@ export const employmentTypeRule: ApprovalRule = (job) => {
     },
   ];
 };
+
+export { employmentTypeRule };

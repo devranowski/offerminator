@@ -10,9 +10,6 @@ import { DefaultCompensationPolicy, type CompensationPolicy } from '../compensat
 import { HOURS_PER_YEAR } from '../salaryAnnualizer.js';
 import { salaryRule } from './salaryRule.js';
 
-const converter = new FixedRateCurrencyConverter(USD_CENTS_PER_CURRENCY_UNIT);
-const defaultPolicy = new DefaultCompensationPolicy();
-
 interface SalaryCase {
   readonly name: string;
   readonly salary: Salary;
@@ -24,6 +21,9 @@ interface ExpectedCompensation {
   readonly salaryUsdCents: number;
   readonly annualizedSalaryUsdCents: number;
 }
+
+const converter = new FixedRateCurrencyConverter(USD_CENTS_PER_CURRENCY_UNIT);
+const defaultPolicy = new DefaultCompensationPolicy();
 
 const thresholdAndCurrencyCases: readonly SalaryCase[] = [
   {

@@ -1,10 +1,10 @@
 import type { ApprovedJob } from '../models/approvedJob.js';
 
-export function compareSalaryAscending(left: ApprovedJob, right: ApprovedJob): number {
+function compareSalaryAscending(left: ApprovedJob, right: ApprovedJob): number {
   return compareNumbers(left.annualizedSalaryUsdCents, right.annualizedSalaryUsdCents);
 }
 
-export function compareSalaryDescending(left: ApprovedJob, right: ApprovedJob): number {
+function compareSalaryDescending(left: ApprovedJob, right: ApprovedJob): number {
   return compareNumbers(right.annualizedSalaryUsdCents, left.annualizedSalaryUsdCents);
 }
 
@@ -19,3 +19,5 @@ function compareNumbers(left: number, right: number): number {
 
   return 0;
 }
+
+export { compareSalaryAscending, compareSalaryDescending };

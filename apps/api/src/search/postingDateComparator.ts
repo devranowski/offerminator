@@ -1,11 +1,11 @@
 import type { ApprovedJob } from '../models/approvedJob.js';
 import type { IsoDate } from '../models/isoDate.js';
 
-export function comparePostingDateAscending(left: ApprovedJob, right: ApprovedJob): number {
+function comparePostingDateAscending(left: ApprovedJob, right: ApprovedJob): number {
   return comparePostingDates(left.postingDate, right.postingDate, compareStrings);
 }
 
-export function comparePostingDateDescending(left: ApprovedJob, right: ApprovedJob): number {
+function comparePostingDateDescending(left: ApprovedJob, right: ApprovedJob): number {
   return comparePostingDates(left.postingDate, right.postingDate, (leftDate, rightDate) =>
     compareStrings(rightDate, leftDate),
   );
@@ -38,3 +38,5 @@ function compareStrings(left: string, right: string): number {
 
   return 0;
 }
+
+export { comparePostingDateAscending, comparePostingDateDescending };

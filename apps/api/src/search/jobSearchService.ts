@@ -7,13 +7,13 @@ import {
 import { compareSalaryAscending, compareSalaryDescending } from './salaryComparator.js';
 import type { JobSort, SearchJobsQuery } from './searchQuery.js';
 
-const DEFAULT_SORT: JobSort = 'posting-date-desc';
-
 type JobComparator = (left: ApprovedJob, right: ApprovedJob) => number;
 
 export interface JobSearchServiceOptions {
   readonly approvedJobs: Pick<ApprovedJobRepository, 'findAll'>;
 }
+
+const DEFAULT_SORT: JobSort = 'posting-date-desc';
 
 export class JobSearchService {
   readonly #approvedJobs: Pick<ApprovedJobRepository, 'findAll'>;

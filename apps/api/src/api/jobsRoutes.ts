@@ -11,10 +11,7 @@ export interface JobsRoutesDependencies {
   readonly searchService: Pick<JobSearchService, 'search'>;
 }
 
-export function registerJobsRoutes(
-  app: FastifyInstance,
-  dependencies: JobsRoutesDependencies,
-): void {
+function registerJobsRoutes(app: FastifyInstance, dependencies: JobsRoutesDependencies): void {
   app.withTypeProvider<ZodTypeProvider>().get(
     '/api/jobs',
     {
@@ -38,3 +35,5 @@ export function registerJobsRoutes(
     },
   );
 }
+
+export { registerJobsRoutes };

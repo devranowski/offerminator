@@ -27,9 +27,23 @@ const expectedTitles = [
   '',
 ];
 
-function isRecord(value: unknown): value is UnknownRecord {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+describe('data/jobs.json fixture integrity', () => {
+  it('preserves the source records, order, and corner cases', () => {
+    const records = readFixture();
+
+    expect(records).toHaveLength(20);
+    expect(records.map((record) => record['title'])).toEqual(expectedTitles);
+    expect(records[0]?.['title']).toBe('Backend Engineer');
+    expect(records[19]?.['company']).toBe('OpsFlex');
+    expect(records[6]?.['language']).toBe('');
+    expect(records[7]?.['salary']).toBe(62.5);
+    expect(records[10]?.['location']).toMatchObject({ city: '' });
+    expect(records[12]?.['location']).toMatchObject({ state: '' });
+    expect(records[15]?.['posting_date']).toBe('');
+    expect(records[19]?.['title']).toBe('');
+    expect(records[19]?.['location']).toBeNull();
+  });
+});
 
 function readFixture(): UnknownRecord[] {
   const fixtureUrl = new URL('../../../data/jobs.json', import.meta.url);
@@ -48,20 +62,6 @@ function readFixture(): UnknownRecord[] {
   });
 }
 
-describe('data/jobs.json fixture integrity', () => {
-  it('preserves the source records, order, and corner cases', () => {
-    const records = readFixture();
-
-    expect(records).toHaveLength(20);
-    expect(records.map((record) => record['title'])).toEqual(expectedTitles);
-    expect(records[0]?.['title']).toBe('Backend Engineer');
-    expect(records[19]?.['company']).toBe('OpsFlex');
-    expect(records[6]?.['language']).toBe('');
-    expect(records[7]?.['salary']).toBe(62.5);
-    expect(records[10]?.['location']).toMatchObject({ city: '' });
-    expect(records[12]?.['location']).toMatchObject({ state: '' });
-    expect(records[15]?.['posting_date']).toBe('');
-    expect(records[19]?.['title']).toBe('');
-    expect(records[19]?.['location']).toBeNull();
-  });
-});
+function isRecord(value: unknown): value is UnknownRecord {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}

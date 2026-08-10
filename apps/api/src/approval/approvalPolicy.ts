@@ -12,6 +12,12 @@ import { locationRule } from './rules/locationRule.js';
 import { salaryRule } from './rules/salaryRule.js';
 import { titleRule } from './rules/titleRule.js';
 
+export interface ApprovalPolicyOptions {
+  readonly rules: readonly ApprovalRule[];
+  readonly currencyConverter: CurrencyConverter;
+  readonly compensationPolicy: CompensationPolicy;
+}
+
 export const approvalRules: readonly ApprovalRule[] = [
   titleRule,
   locationRule,
@@ -20,12 +26,6 @@ export const approvalRules: readonly ApprovalRule[] = [
   companyTypeRule,
   languageRule,
 ];
-
-export interface ApprovalPolicyOptions {
-  readonly rules: readonly ApprovalRule[];
-  readonly currencyConverter: CurrencyConverter;
-  readonly compensationPolicy: CompensationPolicy;
-}
 
 export class ApprovalPolicy {
   constructor(private readonly options: ApprovalPolicyOptions) {}

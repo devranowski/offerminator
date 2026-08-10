@@ -10,7 +10,7 @@ export interface RejectedJobsRoutesDependencies {
   readonly rejectedJobs: Pick<RejectedJobRepository, 'findAll'>;
 }
 
-export function registerRejectedJobsRoutes(
+function registerRejectedJobsRoutes(
   app: FastifyInstance,
   dependencies: RejectedJobsRoutesDependencies,
 ): void {
@@ -35,3 +35,5 @@ export function registerRejectedJobsRoutes(
     },
   );
 }
+
+export { registerRejectedJobsRoutes };

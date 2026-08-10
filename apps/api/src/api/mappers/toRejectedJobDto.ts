@@ -2,7 +2,7 @@ import type { RejectedJobDto } from '@offerminator/api-contracts';
 
 import type { RejectedJob } from '../../models/rejectedJob.js';
 
-export function toRejectedJobDto(job: RejectedJob): RejectedJobDto {
+function toRejectedJobDto(job: RejectedJob): RejectedJobDto {
   return {
     id: job.id,
     title: job.title,
@@ -17,3 +17,5 @@ export function toRejectedJobDto(job: RejectedJob): RejectedJobDto {
     raw: job.raw,
   };
 }
+
+export { toRejectedJobDto };

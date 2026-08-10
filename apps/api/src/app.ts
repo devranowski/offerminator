@@ -16,7 +16,7 @@ export interface AppDependencies {
   readonly ingestionService: Pick<IngestionService, 'getLastSummary'>;
 }
 
-export async function buildApp(
+async function buildApp(
   dependencies: AppDependencies,
   options: FastifyServerOptions = {},
 ): Promise<FastifyInstance> {
@@ -37,3 +37,5 @@ function registerApp(app: FastifyInstance, dependencies: AppDependencies): void 
   registerRejectedJobsRoutes(app, { rejectedJobs: dependencies.rejectedJobs });
   registerIngestionSummaryRoutes(app, { ingestionService: dependencies.ingestionService });
 }
+
+export { buildApp };

@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify';
 
 import { errorResponseSchema, healthResponseSchema } from './schemas/responseSchemas.js';
 
-export function registerHealthRoutes(app: FastifyInstance): void {
+function registerHealthRoutes(app: FastifyInstance): void {
   app.withTypeProvider<ZodTypeProvider>().get(
     '/api/health',
     {
@@ -17,3 +17,5 @@ export function registerHealthRoutes(app: FastifyInstance): void {
     () => ({ status: 'ok' as const }),
   );
 }
+
+export { registerHealthRoutes };

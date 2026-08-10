@@ -7,6 +7,11 @@ import type { RejectionReason } from '../models/rejectionReason.js';
 import type { CurrencyConverter } from '../currency/currencyConverter.js';
 import type { CompensationPolicy } from './compensationPolicy.js';
 
+export type ApprovalRule = (
+  job: NormalizedJobCandidate,
+  context: ApprovalContext,
+) => readonly RejectionReason[];
+
 export class ApprovalContext {
   #approvedJobCompensation: ApprovedJobCompensation | null = null;
 
@@ -29,8 +34,3 @@ export class ApprovalContext {
     return this.#approvedJobCompensation;
   }
 }
-
-export type ApprovalRule = (
-  job: NormalizedJobCandidate,
-  context: ApprovalContext,
-) => readonly RejectionReason[];

@@ -11,13 +11,6 @@ interface ExpectedLocation {
   readonly country: string | null;
 }
 
-function expectLocation(value: unknown, remote: unknown, expected: ExpectedLocation): void {
-  const result = normalizeLocation(value, remote);
-
-  expect(result).toEqual({ ...expected, raw: value });
-  expect(result.raw).toBe(value);
-}
-
 describe('normalizeLocation', () => {
   describe('object locations', () => {
     it('maps state to region, ignores region and extra keys, and preserves raw input', () => {
@@ -231,3 +224,10 @@ describe('normalizeLocation', () => {
     },
   );
 });
+
+function expectLocation(value: unknown, remote: unknown, expected: ExpectedLocation): void {
+  const result = normalizeLocation(value, remote);
+
+  expect(result).toEqual({ ...expected, raw: value });
+  expect(result.raw).toBe(value);
+}

@@ -1,4 +1,4 @@
-export function normalizeOptionalString(value: unknown): string | null {
+function normalizeOptionalString(value: unknown): string | null {
   if (typeof value !== 'string') {
     return null;
   }
@@ -7,3 +7,5 @@ export function normalizeOptionalString(value: unknown): string | null {
 
   return normalized.length === 0 ? null : normalized;
 }
+
+export { normalizeOptionalString };

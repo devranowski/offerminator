@@ -7,7 +7,7 @@ export interface PostingDateNormalizationResult {
   readonly warnings: readonly NormalizationWarning[];
 }
 
-export function normalizePostingDate(value: unknown): PostingDateNormalizationResult {
+function normalizePostingDate(value: unknown): PostingDateNormalizationResult {
   if (value === null || value === undefined) {
     return withoutPostingDate();
   }
@@ -40,3 +40,5 @@ function invalidPostingDate(actualValue: unknown): PostingDateNormalizationResul
     ],
   };
 }
+
+export { normalizePostingDate };

@@ -10,6 +10,17 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { buildApp } from './app.js';
 import { createDependencies, type ApplicationDependencies } from './bootstrap.js';
 
+interface ApiTestContext {
+  readonly app: FastifyInstance;
+  readonly dependencies: ApplicationDependencies;
+}
+
+interface ErrorResponse {
+  readonly statusCode: number;
+  readonly error: string;
+  readonly message: string;
+}
+
 const defaultJobOrder = [
   'Customer Success Manager',
   'Cybersecurity Specialist',
@@ -49,17 +60,6 @@ const invalidQueryCases = [
   '/api/jobs?country=ZZ',
   '/api/jobs?sort=invalid',
 ];
-
-interface ApiTestContext {
-  readonly app: FastifyInstance;
-  readonly dependencies: ApplicationDependencies;
-}
-
-interface ErrorResponse {
-  readonly statusCode: number;
-  readonly error: string;
-  readonly message: string;
-}
 
 let testContext: ApiTestContext | null = null;
 

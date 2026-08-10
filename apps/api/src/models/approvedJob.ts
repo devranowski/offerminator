@@ -36,7 +36,7 @@ export interface ApprovedJobCompensation {
   readonly annualizedSalaryUsdCents: number;
 }
 
-export function createApprovedJobCompensation(
+function createApprovedJobCompensation(
   salaryUsdCents: number,
   annualizedSalaryUsdCents: number,
 ): ApprovedJobCompensation | null {
@@ -52,7 +52,7 @@ export function createApprovedJobCompensation(
   return compensation as ApprovedJobCompensation;
 }
 
-export function createApprovedJob(
+function createApprovedJob(
   job: NormalizedJobCandidate,
   compensation: ApprovedJobCompensation,
 ): ApprovedJob | null {
@@ -101,3 +101,5 @@ function toApprovedLocation(location: JobLocation): ApprovedLocation | null {
 
   return { ...location, country };
 }
+
+export { createApprovedJob, createApprovedJobCompensation };

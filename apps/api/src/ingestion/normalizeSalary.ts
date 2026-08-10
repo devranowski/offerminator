@@ -3,7 +3,7 @@ import { normalizeOptionalString } from './normalizeString.js';
 
 type UnknownRecord = Record<string, unknown>;
 
-export function normalizeSalary(value: unknown): Salary {
+function normalizeSalary(value: unknown): Salary {
   if (value === null || value === undefined) {
     return unknownSalary('missing', value);
   }
@@ -74,3 +74,5 @@ function isValidAmount(value: unknown): value is number {
 function isRecord(value: unknown): value is UnknownRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
+
+export { normalizeSalary };
