@@ -2,6 +2,12 @@ import type { Logger } from 'pino';
 
 import type { JobRejectedLogEvent, JobRejectionLogger } from '../ingestion/jobRejectionLogger.js';
 
+const MAX_PROCESSING_ERROR_MESSAGE_LENGTH = 1_024;
+const TRUNCATED_MESSAGE_SUFFIX = '… [truncated]';
+
+type ProcessingErrorDescription =
+  { readonly name: string; readonly message: string } | { readonly type: string };
+
 export class PinoJobRejectionLogger implements JobRejectionLogger {
   constructor(private readonly logger: Pick<Logger, 'info'>) {}
 
@@ -21,8 +27,26 @@ export class PinoJobRejectionLogger implements JobRejectionLogger {
   }
 }
 
-function describeProcessingError(error: unknown): { readonly type: string } {
+function describeProcessingError(error: unknown): ProcessingErrorDescription {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: truncateMessage(error.message),
+    };
+  }
+
   return {
-    type: error instanceof Error ? error.name : typeof error,
+    type: typeof error,
   };
+}
+
+function truncateMessage(message: string): string {
+  if (message.length <= MAX_PROCESSING_ERROR_MESSAGE_LENGTH) {
+    return message;
+  }
+
+  return `${message.slice(
+    0,
+    MAX_PROCESSING_ERROR_MESSAGE_LENGTH - TRUNCATED_MESSAGE_SUFFIX.length,
+  )}${TRUNCATED_MESSAGE_SUFFIX}`;
 }
