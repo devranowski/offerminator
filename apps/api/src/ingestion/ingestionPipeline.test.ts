@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { ApprovalPolicy, approvalRules } from '../approval/approvalPolicy.js';
 import { DefaultCompensationPolicy } from '../approval/compensationPolicy.js';
@@ -53,8 +53,10 @@ describe('full ingestion pipeline', () => {
     const rejectedJobs = new InMemoryRejectedJobRepository();
     const logger = new RecordingJobRejectionLogger();
     const fixturePath = fileURLToPath(new URL('../../../../data/jobs.json', import.meta.url));
+    const sourceLoader = new FileSystemJobSourceLoader();
+    const loadSources = vi.spyOn(sourceLoader, 'loadSources');
     const service = new IngestionService({
-      sourceLoader: new FileSystemJobSourceLoader(),
+      sourceLoader,
       sourcePaths: [fixturePath],
       approvalPolicy: new ApprovalPolicy({
         rules: approvalRules,
@@ -138,6 +140,21 @@ describe('full ingestion pipeline', () => {
         'STAFFING_FIRM',
       ],
     });
+
+    await expect(service.ingestConfiguredSources()).rejects.toThrow(
+      'Ingestion has already been started for this service instance.',
+    );
+
+    const approvedAfterSecondCall = await approvedJobs.findAll();
+    const rejectedAfterSecondCall = await rejectedJobs.findAll();
+
+    expect(loadSources).toHaveBeenCalledTimes(1);
+    expect(service.getLastSummary()).toBe(summary);
+    expect(approvedAfterSecondCall).toHaveLength(10);
+    expect(rejectedAfterSecondCall).toHaveLength(10);
+    expect(new Set(approvedAfterSecondCall.map((job) => job.id)).size).toBe(10);
+    expect(new Set(rejectedAfterSecondCall.map((job) => job.id)).size).toBe(10);
+    expect(logger.events).toHaveLength(10);
   });
 });
 

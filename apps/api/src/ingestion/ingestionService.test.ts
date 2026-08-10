@@ -246,90 +246,96 @@ describe('IngestionService', () => {
     ]);
   });
 
-  it('retains the latest completed summary after repeated ingestion', async () => {
-    const sourceLoader = new SequencedJobSourceLoader([
-      [
-        {
-          ok: true,
-          source: 'first.json',
-          records: [createRawJob()],
-        },
-      ],
-      [
-        {
-          ok: true,
-          source: 'second.json',
-          records: [createRawJob(), createRawJob()],
-        },
-      ],
+  it('allows only one of two concurrent ingestion calls to run', async () => {
+    const sourceLoader = new StaticJobSourceLoader([
+      {
+        ok: true,
+        source: 'concurrent.json',
+        records: [createRawJob(), createRawJob({ employment_type: 'Contract' })],
+      },
     ]);
+    const approvedJobs = new InMemoryApprovedJobRepository();
+    const rejectedJobs = new InMemoryRejectedJobRepository();
+    const logger = new RecordingJobRejectionLogger();
     const service = new IngestionService({
       sourceLoader,
       sourcePaths: ['/input/configured.json'],
       approvalPolicy: createApprovalPolicy(),
-      approvedJobs: new InMemoryApprovedJobRepository(),
-      rejectedJobs: new InMemoryRejectedJobRepository(),
-      logger: new RecordingJobRejectionLogger(),
+      approvedJobs,
+      rejectedJobs,
+      logger,
     });
 
-    const firstSummary = await service.ingestConfiguredSources();
-    const secondSummary = await service.ingestConfiguredSources();
+    const [firstRun, secondRun] = await Promise.allSettled([
+      service.ingestConfiguredSources(),
+      service.ingestConfiguredSources(),
+    ]);
 
-    expect(firstSummary).toMatchObject({
-      totalRecords: 1,
-      approved: 1,
-      sources: [{ name: 'first.json' }],
+    expect(firstRun).toMatchObject({
+      status: 'fulfilled',
+      value: {
+        totalRecords: 2,
+        approved: 1,
+        rejected: 1,
+      },
     });
-    expect(secondSummary).toMatchObject({
-      totalRecords: 2,
-      approved: 2,
-      sources: [{ name: 'second.json' }],
+    expect(secondRun).toEqual({
+      status: 'rejected',
+      reason: new Error('Ingestion has already been started for this service instance.'),
     });
-    expect(service.getLastSummary()).toBe(secondSummary);
+    if (firstRun.status !== 'fulfilled') {
+      throw new Error('Expected the first concurrent ingestion call to succeed.');
+    }
+
+    expect(sourceLoader.loadedPaths).toEqual([['/input/configured.json']]);
+    await expect(approvedJobs.findAll()).resolves.toHaveLength(1);
+    await expect(rejectedJobs.findAll()).resolves.toHaveLength(1);
+    expect(logger.events.map((event) => event.reasonCodes)).toEqual([
+      ['EMPLOYMENT_TYPE_NOT_FULL_TIME'],
+    ]);
+    expect(service.getLastSummary()).toBe(firstRun.value);
   });
 
-  it('retains the last completed summary when storage fails on a later run', async () => {
+  it('blocks retry after a first-run storage failure leaves partial state', async () => {
     const storageError = new Error('Synthetic storage failure.');
     const savedJobIds: string[] = [];
-    let shouldFailStorage = false;
     const approvedJobs: ApprovedJobRepository = {
       save(job) {
+        if (savedJobIds.length === 1) {
+          return Promise.reject(storageError);
+        }
+
         savedJobIds.push(job.id);
-        return shouldFailStorage ? Promise.reject(storageError) : Promise.resolve();
+        return Promise.resolve();
       },
       findAll: () => Promise.resolve([]),
     };
+    const sourceLoader = new StaticJobSourceLoader([
+      {
+        ok: true,
+        source: 'storage.json',
+        records: [createRawJob(), createRawJob()],
+      },
+    ]);
+    const logger = new RecordingJobRejectionLogger();
     const service = new IngestionService({
-      sourceLoader: new SequencedJobSourceLoader([
-        [
-          {
-            ok: true,
-            source: 'completed.json',
-            records: [createRawJob()],
-          },
-        ],
-        [
-          {
-            ok: true,
-            source: 'storage.json',
-            records: [createRawJob(), createRawJob()],
-          },
-        ],
-      ]),
+      sourceLoader,
       sourcePaths: ['/input/storage.json'],
       approvalPolicy: createApprovalPolicy(),
       approvedJobs,
       rejectedJobs: new InMemoryRejectedJobRepository(),
-      logger: new RecordingJobRejectionLogger(),
+      logger,
     });
 
-    const completedSummary = await service.ingestConfiguredSources();
-    shouldFailStorage = true;
-
     await expect(service.ingestConfiguredSources()).rejects.toBe(storageError);
+    await expect(service.ingestConfiguredSources()).rejects.toThrow(
+      'Ingestion has already been started for this service instance.',
+    );
 
-    expect(savedJobIds).toEqual(['completed.json:0', 'storage.json:0']);
-    expect(service.getLastSummary()).toBe(completedSummary);
+    expect(sourceLoader.loadedPaths).toEqual([['/input/storage.json']]);
+    expect(savedJobIds).toEqual(['storage.json:0']);
+    expect(logger.events).toEqual([]);
+    expect(service.getLastSummary()).toBeNull();
   });
 
   it('awaits asynchronous logging failures and does not publish a summary', async () => {
@@ -367,23 +373,6 @@ class StaticJobSourceLoader implements JobSourceLoader {
   loadSources(paths: readonly string[]): Promise<readonly SourceLoadResult[]> {
     this.loadedPaths.push([...paths]);
     return Promise.resolve(this.results);
-  }
-}
-
-class SequencedJobSourceLoader implements JobSourceLoader {
-  private nextResultIndex = 0;
-
-  constructor(private readonly resultsByRun: readonly (readonly SourceLoadResult[])[]) {}
-
-  loadSources(): Promise<readonly SourceLoadResult[]> {
-    const results = this.resultsByRun[this.nextResultIndex];
-
-    if (results === undefined) {
-      return Promise.reject(new Error('No synthetic source result configured for this run.'));
-    }
-
-    this.nextResultIndex += 1;
-    return Promise.resolve(results);
   }
 }
 

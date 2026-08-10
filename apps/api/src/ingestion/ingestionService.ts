@@ -24,6 +24,7 @@ type RecordOutcome = ApprovalDecision['status'];
 
 export class IngestionService {
   private readonly sourcePaths: readonly string[];
+  private ingestionStarted = false;
   private lastSummary: IngestionSummary | null = null;
 
   constructor(private readonly options: IngestionServiceOptions) {
@@ -31,6 +32,12 @@ export class IngestionService {
   }
 
   async ingestConfiguredSources(): Promise<IngestionSummary> {
+    if (this.ingestionStarted) {
+      throw new Error('Ingestion has already been started for this service instance.');
+    }
+
+    this.ingestionStarted = true;
+
     const sourceResults = await this.options.sourceLoader.loadSources(this.sourcePaths);
     const sources: SourceSummary[] = [];
     const sourceErrors: SourceError[] = [];
