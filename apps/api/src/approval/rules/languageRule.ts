@@ -1,3 +1,4 @@
+import { isApprovedLanguageForCountry } from '../../models/languageEligibility.js';
 import type { ApprovalRule } from '../approvalContext.js';
 
 export const languageRule: ApprovalRule = (job) => {
@@ -12,7 +13,7 @@ export const languageRule: ApprovalRule = (job) => {
     ];
   }
 
-  if (job.language === 'english' || (job.language === 'french' && job.location.country === 'CA')) {
+  if (isApprovedLanguageForCountry(job.language, job.location.country)) {
     return [];
   }
 

@@ -1,5 +1,6 @@
 import type { IsoDate } from './isoDate.js';
 import type { ApprovedCompanyType, ApprovedLanguage } from './jobEnums.js';
+import { isApprovedLanguageForCountry } from './languageEligibility.js';
 import { isApprovedInPersonCountry, type ApprovedLocation, type JobLocation } from './location.js';
 import { createNonEmptyString, type NonEmptyString } from './nonEmptyString.js';
 import type { NormalizedJobCandidate } from './normalizedJob.js';
@@ -64,7 +65,7 @@ export function createApprovedJob(
     job.salary.kind === 'unknown' ||
     job.employmentType !== 'full-time' ||
     (job.companyType !== 'direct-employer' && job.companyType !== 'consulting-agency') ||
-    !isApprovedLanguage(job.language, location)
+    !isApprovedLanguageForCountry(job.language, location.country)
   ) {
     return null;
   }
@@ -99,11 +100,4 @@ function toApprovedLocation(location: JobLocation): ApprovedLocation | null {
   }
 
   return { ...location, country };
-}
-
-function isApprovedLanguage(
-  language: NormalizedJobCandidate['language'],
-  location: ApprovedLocation,
-): language is ApprovedLanguage {
-  return language === 'english' || (language === 'french' && location.country === 'CA');
 }
