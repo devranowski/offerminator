@@ -1,0 +1,37 @@
+export type JobSortDto = 'salary-asc' | 'salary-desc' | 'posting-date-asc' | 'posting-date-desc';
+
+export interface JobsQueryDto {
+  readonly q?: string;
+  readonly country?: string;
+  readonly sort?: JobSortDto;
+}
+
+export interface JobLocationDto {
+  readonly kind: 'remote' | 'in-person';
+  readonly city: string | null;
+  readonly region: string | null;
+  readonly country: string | null;
+}
+
+export interface JobSalaryDto {
+  readonly amount: number;
+  readonly currency: string;
+  readonly period: 'annual' | 'hourly';
+  readonly usdEquivalent: number;
+  readonly annualizedUsd: number;
+}
+
+export interface JobDto {
+  readonly id: string;
+  readonly title: string;
+  readonly company: string | null;
+  readonly description: string | null;
+  readonly location: JobLocationDto;
+  readonly salary: JobSalaryDto;
+  readonly postingDate: string | null;
+}
+
+export interface JobsResponseDto {
+  readonly items: readonly JobDto[];
+  readonly total: number;
+}
