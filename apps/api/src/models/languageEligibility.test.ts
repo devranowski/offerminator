@@ -3,22 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { createCountryCode, type CountryCode } from './countryCode.js';
 import type { JobLanguage } from './jobEnums.js';
 import { isApprovedLanguageForCountry } from './languageEligibility.js';
-import type { RemoteJobLocation } from './location.js';
 
 const canada = requiredCountryCode('CA');
-const remoteCanada: RemoteJobLocation = {
-  kind: 'remote',
-  city: null,
-  region: null,
-  country: canada,
-  raw: 'Remote, CA',
-};
 
 describe('isApprovedLanguageForCountry', () => {
   it.each([
     ['English in the US', 'english', requiredCountryCode('US'), true],
     ['English without a known country', 'english', null, true],
-    ['French for a remote Canadian job', 'french', remoteCanada.country, true],
+    ['French in Canada', 'french', canada, true],
     ['French in the US', 'french', requiredCountryCode('US'), false],
     ['French without a known country', 'french', null, false],
     ['Another language in Canada', 'other', canada, false],

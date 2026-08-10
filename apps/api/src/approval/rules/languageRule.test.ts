@@ -23,6 +23,7 @@ describe('languageRule', () => {
     ['English in Canada', 'english', inPersonLocation('CA')],
     ['English for a remote UK job', 'english', remoteLocation('GB')],
     ['French in Canada', 'french', inPersonLocation('CA')],
+    ['French for a remote Canadian job', 'french', remoteLocation('CA')],
   ] satisfies ReadonlyArray<readonly [string, JobLanguage, JobLocation]>)(
     'accepts %s',
     (_caseName, language, location) => {
