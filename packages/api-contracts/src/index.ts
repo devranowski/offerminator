@@ -1,3 +1,4 @@
+export { jobsResponseSchema } from './jobs.js';
 export type {
   JobDto,
   JobLocationDto,
@@ -6,12 +7,14 @@ export type {
   JobsResponseDto,
   JobSortDto,
 } from './jobs.js';
+export { ingestionSummaryResponseSchema } from './ingestionSummary.js';
 export type {
   IngestionSummaryDto,
   SourceErrorCodeDto,
   SourceErrorDto,
   SourceSummaryDto,
 } from './ingestionSummary.js';
+export { rejectedJobsResponseSchema } from './rejectedJobs.js';
 export type {
   RejectedJobDto,
   RejectedJobsResponseDto,

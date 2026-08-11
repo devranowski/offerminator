@@ -1,10 +1,13 @@
-import type { IngestionSummaryDto } from '@offerminator/api-contracts';
+import {
+  ingestionSummaryResponseSchema,
+  type IngestionSummaryDto,
+} from '@offerminator/api-contracts';
 import type { ZodTypeProvider } from '@fastify/type-provider-zod';
 import type { FastifyInstance } from 'fastify';
 
 import type { IngestionService } from '../ingestion/ingestionService.js';
 import { toIngestionSummaryDto } from './mappers/toIngestionSummaryDto.js';
-import { errorResponseSchema, ingestionSummaryResponseSchema } from './schemas/responseSchemas.js';
+import { errorResponseSchema } from './schemas/responseSchemas.js';
 
 export interface IngestionSummaryRoutesDependencies {
   readonly ingestionService: Pick<IngestionService, 'getLastSummary'>;

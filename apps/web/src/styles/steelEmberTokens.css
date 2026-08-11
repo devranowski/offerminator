@@ -1,0 +1,60 @@
+:root {
+  --color-neutral-0: #ffffff;
+  --color-neutral-50: #f7f9fb;
+  --color-neutral-100: #eef2f6;
+  --color-neutral-200: #e1e7ed;
+  --color-neutral-300: #c5ced8;
+  --color-neutral-400: #98a6b6;
+  --color-neutral-500: #768397;
+  --color-neutral-600: #566277;
+  --color-neutral-700: #3d4a5c;
+  --color-neutral-800: #253246;
+  --color-neutral-900: #172033;
+  --color-neutral-950: #111a2a;
+
+  --color-background: #eef1f5;
+  --color-surface: #fafbfc;
+  --color-surface-subtle: #e7edf2;
+  --color-text: #172033;
+  --color-text-muted: #566277;
+  --color-border: #c5ced8;
+  --color-border-strong: #768397;
+  --color-header: #141d2e;
+  --color-header-text: #f7f9fc;
+  --color-header-muted: #aebdce;
+  --color-cleared: #176879;
+  --color-cleared-surface: #dceff2;
+  --color-cleared-border: #78abb5;
+  --color-terminated: #97372b;
+  --color-terminated-surface: #f8e1d9;
+  --color-terminated-border: #c98576;
+  --color-code-background: #111a2a;
+  --color-code-text: #e8eef5;
+  --color-focus: #2e70c6;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-md: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.65;
+  --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 5px var(--color-focus);
+}

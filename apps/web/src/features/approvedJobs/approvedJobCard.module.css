@@ -1,0 +1,153 @@
+.jobCard {
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-4) 18px 0;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-cleared-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.recordNumber {
+  position: absolute;
+  top: 17px;
+  right: 118px;
+  color: var(--color-text-muted);
+  font: 500 9px/1 var(--font-mono);
+  letter-spacing: 0.06em;
+  display: none;
+}
+
+.jobHeader {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.jobHeader > div {
+  min-width: 0;
+}
+
+.jobTitle {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.jobCompany {
+  margin: 2px 0 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.statusMarker {
+  display: inline-flex;
+  min-height: 24px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid var(--color-cleared-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-cleared);
+  background: var(--color-cleared-surface);
+  font: 600 10px/1.2 var(--font-mono);
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.statusMarker svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  stroke-width: 2;
+}
+
+.jobMeta {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+  margin: 13px -18px 0;
+  padding: 11px 18px 12px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-subtle);
+}
+
+.jobMeta div {
+  min-width: 0;
+}
+
+.jobMeta dt {
+  margin-bottom: 3px;
+  color: var(--color-text-muted);
+  font: 500 9px/1.4 var(--font-mono);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.jobMeta dd {
+  margin: 0;
+  font: 500 12px/1.45 var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.jobMeta small {
+  display: block;
+  color: var(--color-text-muted);
+  font: 400 10px/1.45 var(--font-mono);
+}
+
+.unavailable {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.jobDate {
+  grid-column: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+@media (--viewport-wide-mobile) {
+  .jobMeta {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .jobDate {
+    grid-column: 1 / -1;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+@media (--viewport-tablet) {
+  .recordNumber {
+    display: block;
+  }
+
+  .jobHeader {
+    flex-direction: row;
+    gap: 92px;
+  }
+}
+
+@media (--viewport-desktop) {
+  .jobMeta {
+    grid-template-columns: 1.15fr 1fr 0.42fr;
+  }
+
+  .jobDate {
+    grid-column: auto;
+    padding-top: 0;
+    border-top: 0;
+  }
+}

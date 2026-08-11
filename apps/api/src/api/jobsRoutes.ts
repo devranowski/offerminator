@@ -1,11 +1,11 @@
-import type { JobsResponseDto } from '@offerminator/api-contracts';
+import { jobsResponseSchema, type JobsResponseDto } from '@offerminator/api-contracts';
 import type { ZodTypeProvider } from '@fastify/type-provider-zod';
 import type { FastifyInstance } from 'fastify';
 
 import type { JobSearchService } from '../search/jobSearchService.js';
 import { toJobDto } from './mappers/toJobDto.js';
 import { jobsQuerySchema } from './schemas/jobsQuerySchema.js';
-import { errorResponseSchema, jobsResponseSchema } from './schemas/responseSchemas.js';
+import { errorResponseSchema } from './schemas/responseSchemas.js';
 
 export interface JobsRoutesDependencies {
   readonly searchService: Pick<JobSearchService, 'search'>;

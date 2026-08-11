@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prebuild": "npm run build --workspace @offerminator/api-contracts",
     "build": "tsc --project tsconfig.build.json",
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch --conditions=development src/server.ts",
     "start": "node dist/server.js",
     "test": "vitest run",
     "typecheck": "tsc --project tsconfig.json"

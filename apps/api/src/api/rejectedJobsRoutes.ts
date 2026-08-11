@@ -1,10 +1,13 @@
-import type { RejectedJobsResponseDto } from '@offerminator/api-contracts';
+import {
+  rejectedJobsResponseSchema,
+  type RejectedJobsResponseDto,
+} from '@offerminator/api-contracts';
 import type { ZodTypeProvider } from '@fastify/type-provider-zod';
 import type { FastifyInstance } from 'fastify';
 
 import type { RejectedJobRepository } from '../storage/rejectedJobRepository.js';
 import { toRejectedJobDto } from './mappers/toRejectedJobDto.js';
-import { errorResponseSchema, rejectedJobsResponseSchema } from './schemas/responseSchemas.js';
+import { errorResponseSchema } from './schemas/responseSchemas.js';
 
 export interface RejectedJobsRoutesDependencies {
   readonly rejectedJobs: Pick<RejectedJobRepository, 'findAll'>;

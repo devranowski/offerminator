@@ -1,3 +1,5 @@
+import { z } from 'zod/v4';
+
 export type JobSortDto = 'salary-asc' | 'salary-desc' | 'posting-date-asc' | 'posting-date-desc';
 
 export interface JobsQueryDto {
@@ -35,3 +37,33 @@ export interface JobsResponseDto {
   readonly items: readonly JobDto[];
   readonly total: number;
 }
+
+const nonnegativeIntegerSchema = z.number().int().nonnegative();
+
+const jobSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  company: z.string().nullable(),
+  description: z.string().nullable(),
+  location: z.object({
+    kind: z.enum(['remote', 'in-person']),
+    city: z.string().nullable(),
+    region: z.string().nullable(),
+    country: z.string().nullable(),
+  }),
+  salary: z.object({
+    amount: z.number(),
+    currency: z.string(),
+    period: z.enum(['annual', 'hourly']),
+    usdEquivalent: z.number(),
+    annualizedUsd: z.number(),
+  }),
+  postingDate: z.iso.date().nullable(),
+});
+
+const jobsResponseSchema = z.object({
+  items: z.array(jobSchema).readonly(),
+  total: nonnegativeIntegerSchema,
+}) satisfies z.ZodType<JobsResponseDto>;
+
+export { jobsResponseSchema };
