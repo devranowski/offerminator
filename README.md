@@ -2,9 +2,9 @@
 
 Offerminator ingests a heterogeneous JSON job feed, normalizes each field independently, evaluates every record against six deterministic eligibility rules, and exposes the result through a Fastify API and a React interface.
 
-Human decisions have been removed from job screening. Approval is automatic against explicit, deterministic rules; there is no manual-review workflow. The UI names the two outcomes **Cleared** and **Terminated**, but these are presentation labels for approved and rejected records, not mutable workflow states.
+**Live demo:** [Open Offerminator](https://offerminator.onrender.com). The free Render instance can take about a minute to wake after a period of inactivity.
 
-The restrained **Steel / Ember** presentation gives the two automatic outcomes distinct visual identities without turning them into a manual workflow: steel and cyan structure the Cleared view, retro green marks successful approval, and ember identifies Terminated records. The Terminator-inspired language is confined to presentation; controls remain literal and the domain continues to use approved/rejected terminology.
+Human decisions have been removed from job screening. Approval is automatic against explicit, deterministic rules; there is no manual-review workflow. The UI names the two outcomes **Cleared** and **Terminated**, but these are presentation labels for approved and rejected records, not mutable workflow states.
 
 ## Overview
 
@@ -371,7 +371,7 @@ AI tools were used as an engineering aid for exploration, implementation support
 
 ## UI, accessibility and visual verification
 
-The interface follows a mobile-first **Steel / Ember** direction: steel-toned surfaces, cyan for Cleared, ember for Terminated, sharp geometry, locally bundled IBM Plex Sans and IBM Plex Mono, and visible focus treatment. Named `min-width` custom media centralize breakpoints; feature styles do not repeat numeric breakpoint values or use desktop-first `max-width` queries.
+The interface is mobile-first, uses locally bundled IBM Plex Sans and IBM Plex Mono, and provides visible focus treatment. Named `min-width` custom media centralize breakpoints; feature styles do not repeat numeric breakpoint values or use desktop-first `max-width` queries.
 
 The browser client calls only relative `/api` paths. Vite proxies them to Fastify during development, avoiding a hardcoded backend URL in application code and avoiding local CORS configuration. Ingestion summary and list queries are independent, so a summary failure has its own retry and does not hide the job lists. The Terminated collection is not requested until that tab is opened for the first time.
 
