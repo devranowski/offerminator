@@ -8,10 +8,6 @@
     "apps/api",
     "apps/web"
   ],
-  "engines": {
-    "node": ">=24.19.0 <25",
-    "npm": ">=11.17.0 <12"
-  },
   "packageManager": "npm@11.17.0",
   "scripts": {
     "build": "npm run build --workspaces --if-present",
@@ -27,6 +23,7 @@
     "@types/node": "24.13.3",
     "concurrently": "10.0.4",
     "eslint": "10.8.1",
+    "jsdom": "29.1.1",
     "prettier": "3.9.6",
     "typescript": "6.0.3",
     "typescript-eslint": "8.66.0",

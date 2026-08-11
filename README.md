@@ -16,10 +16,10 @@ The application intentionally minimizes infrastructure. It invests instead in ex
 
 ## Quick start
 
-Prerequisites:
-
-- Node.js `24.19.0` (also pinned in `.nvmrc`);
-- npm `11.17.0`.
+Node.js 24 LTS is recommended. The repository records Node.js `24.19.0` in
+`.nvmrc` and npm `11.17.0` in `packageManager` as the known-good CI toolchain,
+not as exact local installation requirements. A current npm bundled with a
+supported Node.js release can run the project directly.
 
 From the repository root:
 
