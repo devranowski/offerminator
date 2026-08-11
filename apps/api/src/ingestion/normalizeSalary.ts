@@ -3,6 +3,8 @@ import { normalizeOptionalString } from './normalizeString.js';
 
 type UnknownRecord = Record<string, unknown>;
 
+const ASCII_CURRENCY_CODE_PATTERN = /^[A-Za-z]{3}$/u;
+
 function normalizeSalary(value: unknown): Salary {
   if (value === null || value === undefined) {
     return unknownSalary('missing', value);
@@ -24,29 +26,33 @@ function normalizeSalary(value: unknown): Salary {
   }
 
   const amount = value['value'];
-  const currency = normalizeOptionalString(value['currency'])?.toUpperCase() ?? null;
+  const currency = normalizeOptionalString(value['currency']);
 
   if (currency === null) {
     return unknownSalary('missing-currency', value);
   }
 
+  const normalizedCurrency = ASCII_CURRENCY_CODE_PATTERN.test(currency)
+    ? currency.toUpperCase()
+    : currency;
+
   const unit = value['unit'];
 
   if (unit === undefined) {
-    return annualSalary(amount, currency);
+    return annualSalary(amount, normalizedCurrency);
   }
 
   const normalizedUnit = normalizeOptionalString(unit)?.toLowerCase();
 
   if (normalizedUnit === 'annual') {
-    return annualSalary(amount, currency);
+    return annualSalary(amount, normalizedCurrency);
   }
 
   if (normalizedUnit === 'hourly') {
     return {
       kind: 'hourly',
       amount,
-      currency,
+      currency: normalizedCurrency,
       source: 'explicit',
     };
   }

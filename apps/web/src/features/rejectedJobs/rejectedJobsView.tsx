@@ -4,14 +4,19 @@ import { fetchRejectedJobs, rejectedJobsQueryKey } from '../../api/jobsApi.js';
 import { RejectedJobCard } from './rejectedJobCard.js';
 import styles from './rejectedJobsView.module.css';
 
+interface RejectedJobsViewProps {
+  readonly isEnabled: boolean;
+}
+
 interface RejectedJobsErrorStateProps {
   readonly onRetry: () => void;
 }
 
-function RejectedJobsView() {
+function RejectedJobsView({ isEnabled }: RejectedJobsViewProps) {
   const jobsQuery = useQuery({
     queryKey: rejectedJobsQueryKey(),
     queryFn: ({ signal }) => fetchRejectedJobs(signal),
+    enabled: isEnabled,
   });
 
   function retry(): void {

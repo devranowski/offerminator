@@ -20,7 +20,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: 26px var(--space-4) 24px;
+  padding: 1.625rem var(--space-4) 1.5rem;
   border-bottom: 3px solid var(--color-cleared);
   color: var(--color-header-text);
   background: var(--color-header);
@@ -32,6 +32,11 @@
 
 .offerminator[data-view='terminated'] .systemLabel::before {
   background: var(--color-terminated);
+}
+
+.siteHeader > div {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .productName,
@@ -48,29 +53,30 @@
   font-weight: 600;
   letter-spacing: 0.035em;
   line-height: var(--line-height-tight);
+  overflow-wrap: anywhere;
   text-transform: uppercase;
 }
 
 .tagline {
-  margin-top: 7px;
+  margin-top: 0.4375rem;
   color: var(--color-header-muted);
-  font: 400 12px/1.5 var(--font-mono);
+  font: 400 0.75rem/1.5 var(--font-mono);
   letter-spacing: 0.01em;
 }
 
 .systemLabel {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 0.5625rem;
   margin-top: 0;
   color: var(--color-header-muted);
-  font: 500 10px/1.5 var(--font-mono);
+  font: 500 0.625rem/1.5 var(--font-mono);
   letter-spacing: 0.075em;
 }
 
 .systemLabel::before {
-  width: 7px;
-  height: 7px;
+  width: 0.4375rem;
+  height: 0.4375rem;
   border: 1px solid var(--color-header-text);
   background: var(--color-cleared);
   content: '';
@@ -78,7 +84,7 @@
 
 .summaryStrip {
   display: grid;
-  grid-template-columns: 46px minmax(0, 1fr);
+  grid-template-columns: 2.875rem minmax(0, 1fr);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-neutral-200);
 }
@@ -95,65 +101,65 @@
   border-right: 1px solid var(--color-border);
   color: var(--color-success);
   background: var(--color-success-surface);
-  font: 600 10px/1 var(--font-mono);
+  font: 600 0.625rem/1 var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
 .summaryStrip > div {
   min-width: 0;
-  padding: 15px var(--space-4) 16px 18px;
+  padding: 0.9375rem var(--space-4) 1rem 1.125rem;
 }
 
 .summaryStrip h1 {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   letter-spacing: -0.012em;
   line-height: var(--line-height-tight);
 }
 
 .summaryStrip p {
-  margin-top: 3px;
+  margin-top: 0.1875rem;
   color: var(--color-text-muted);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .summaryRetry {
-  min-height: 32px;
+  min-height: 2rem;
   margin-top: var(--space-3);
   padding: 0 var(--space-3);
   border: 1px solid var(--color-header);
   border-radius: var(--radius-sm);
   color: var(--color-header-text);
   background: var(--color-header);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
 .mainContent {
   flex: 1;
   min-width: 0;
-  min-height: 520px;
+  min-height: 32.5rem;
   padding: var(--space-5) var(--space-4) var(--space-6);
   background: var(--color-background);
 }
 
 .footer {
-  padding: 18px var(--space-4);
+  padding: 1.125rem var(--space-4);
   border-top: 1px solid var(--color-border);
   color: var(--color-text-muted);
   background: var(--color-surface);
-  font: 400 10px/1.5 var(--font-mono);
+  font: 400 0.625rem/1.5 var(--font-mono);
   letter-spacing: 0.04em;
 }
 
 @media (--viewport-wide-mobile) {
   .siteHeader {
-    min-height: 104px;
+    min-height: 6.5rem;
     padding-inline: var(--space-5);
   }
 
   .productName {
-    font-size: 28px;
+    font-size: 1.75rem;
   }
 
   .mainContent,
@@ -162,7 +168,7 @@
   }
 
   .summaryStrip {
-    grid-template-columns: 58px minmax(0, 1fr);
+    grid-template-columns: 3.625rem minmax(0, 1fr);
   }
 
   .summaryStrip > div {
@@ -174,8 +180,8 @@
   }
 
   .mainContent {
-    min-height: 590px;
-    padding-top: 30px;
+    min-height: 36.875rem;
+    padding-top: 1.875rem;
   }
 }
 
@@ -187,7 +193,7 @@
   }
 
   .systemLabel {
-    margin-top: 4px;
+    margin-top: 0.25rem;
   }
 
   .mainContent,

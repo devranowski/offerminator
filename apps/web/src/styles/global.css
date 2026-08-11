@@ -36,6 +36,18 @@ pre:focus-visible {
   box-shadow: var(--focus-ring);
 }
 
+@media (forced-colors: active) {
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  summary:focus-visible,
+  pre:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+}
+
 ::selection {
   color: var(--color-header-text);
   background: var(--color-cleared);

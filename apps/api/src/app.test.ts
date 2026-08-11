@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { buildApp } from './app.js';
 import { createDependencies, type ApplicationDependencies } from './bootstrap.js';
+import type { RejectedJob } from './models/rejectedJob.js';
 
 interface ApiTestContext {
   readonly app: FastifyInstance;
@@ -58,6 +59,7 @@ const invalidQueryCases = [
   '/api/jobs?country=invalid',
   '/api/jobs?country=123',
   '/api/jobs?country=ZZ',
+  '/api/jobs?country=u%C5%BF',
   '/api/jobs?sort=invalid',
 ];
 
@@ -301,7 +303,44 @@ describe('Fastify API', () => {
         language: 'English',
         remote: true,
       },
+      rawPreviewTruncated: false,
     });
+  });
+
+  it('serializes a bounded rejected-job preview for deeply nested valid JSON', async () => {
+    const nestingDepth = 10_000;
+    const json = `${'{"nested":'.repeat(nestingDepth)}"leaf"${'}'.repeat(nestingDepth)}`;
+    const raw: unknown = JSON.parse(json);
+    const rejectedJob: RejectedJob = {
+      id: 'synthetic:deep',
+      source: 'synthetic.json',
+      sourceIndex: 0,
+      title: null,
+      company: null,
+      reasons: [
+        {
+          code: 'INVALID_RECORD_SHAPE',
+          field: 'record',
+          message: 'Record must be a JSON object.',
+        },
+      ],
+      warnings: [],
+      raw,
+    };
+    const app = await buildApp({
+      searchService: { search: () => Promise.resolve([]) },
+      rejectedJobs: { findAll: () => Promise.resolve([rejectedJob]) },
+      ingestionService: { getLastSummary: () => null },
+    });
+
+    const response = await app.inject({ method: 'GET', url: '/api/rejected-jobs' });
+    const body = response.json<RejectedJobsResponseDto>();
+
+    expect(response.statusCode).toBe(200);
+    expect(body.total).toBe(1);
+    expect(body.items[0]?.rawPreviewTruncated).toBe(true);
+    expect(JSON.stringify(body.items[0]?.raw)).toContain('[Raw preview truncated]');
+    await app.close();
   });
 
   it('keeps endpoint totals consistent with the completed ingestion summary', async () => {

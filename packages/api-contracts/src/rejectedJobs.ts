@@ -19,6 +19,14 @@ export type RejectionCodeDto =
   | 'LANGUAGE_NOT_ALLOWED'
   | 'PROCESSING_ERROR';
 
+export type RawJobPreviewDto =
+  | null
+  | boolean
+  | number
+  | string
+  | readonly RawJobPreviewDto[]
+  | { readonly [key: string]: RawJobPreviewDto };
+
 export interface RejectionReasonDto {
   readonly code: RejectionCodeDto;
   readonly field: string;
@@ -32,13 +40,24 @@ export interface RejectedJobDto {
   readonly source: string;
   readonly sourceIndex: number;
   readonly reasons: readonly RejectionReasonDto[];
-  readonly raw: unknown;
+  readonly raw: RawJobPreviewDto;
+  readonly rawPreviewTruncated: boolean;
 }
 
 export interface RejectedJobsResponseDto {
   readonly items: readonly RejectedJobDto[];
   readonly total: number;
 }
+
+interface RawJobPreviewNode {
+  readonly value: unknown;
+  readonly depth: number;
+}
+
+const rawJobPreviewMaxDepth = 8;
+const rawJobPreviewMaxEntries = 100;
+const rawJobPreviewMaxKeyLength = 128;
+const rawJobPreviewMaxStringLength = 1_024;
 
 const nonnegativeIntegerSchema = z.number().int().nonnegative();
 
@@ -77,12 +96,101 @@ const rejectedJobSchema = z.object({
       }),
     )
     .readonly(),
-  raw: z.unknown(),
+  raw: z.custom<RawJobPreviewDto>(
+    isRawJobPreview,
+    'Raw record preview exceeds the supported transport limits.',
+  ),
+  rawPreviewTruncated: z.boolean(),
 });
 
-const rejectedJobsResponseSchema = z.object({
-  items: z.array(rejectedJobSchema).readonly(),
-  total: nonnegativeIntegerSchema,
-}) satisfies z.ZodType<RejectedJobsResponseDto>;
+const rejectedJobsResponseSchema = z
+  .object({
+    items: z.array(rejectedJobSchema).readonly(),
+    total: nonnegativeIntegerSchema,
+  })
+  .refine(({ items, total }) => total === items.length, {
+    message: 'Total must match the number of rejected jobs.',
+    path: ['total'],
+  }) satisfies z.ZodType<RejectedJobsResponseDto>;
 
-export { rejectedJobsResponseSchema };
+function isRawJobPreview(value: unknown): value is RawJobPreviewDto {
+  const pending: RawJobPreviewNode[] = [{ value, depth: 0 }];
+  const seenObjects = new WeakSet<object>();
+  let entryCount = 0;
+
+  while (pending.length > 0) {
+    const node = pending.pop();
+
+    if (node === undefined) {
+      return false;
+    }
+
+    const currentValue = node.value;
+
+    if (
+      currentValue === null ||
+      typeof currentValue === 'boolean' ||
+      (typeof currentValue === 'number' && Number.isFinite(currentValue))
+    ) {
+      continue;
+    }
+
+    if (typeof currentValue === 'string') {
+      if (currentValue.length > rawJobPreviewMaxStringLength) {
+        return false;
+      }
+
+      continue;
+    }
+
+    if (typeof currentValue !== 'object' || node.depth >= rawJobPreviewMaxDepth) {
+      return false;
+    }
+
+    if (seenObjects.has(currentValue)) {
+      return false;
+    }
+
+    seenObjects.add(currentValue);
+
+    if (Array.isArray(currentValue)) {
+      entryCount += currentValue.length;
+
+      if (entryCount > rawJobPreviewMaxEntries) {
+        return false;
+      }
+
+      for (const item of currentValue) {
+        const itemValue: unknown = item;
+        pending.push({ value: itemValue, depth: node.depth + 1 });
+      }
+
+      continue;
+    }
+
+    for (const key in currentValue) {
+      if (!Object.hasOwn(currentValue, key)) {
+        continue;
+      }
+
+      entryCount += 1;
+
+      if (entryCount > rawJobPreviewMaxEntries || key.length > rawJobPreviewMaxKeyLength) {
+        return false;
+      }
+
+      const propertyValue: unknown = Reflect.get(currentValue, key);
+      pending.push({ value: propertyValue, depth: node.depth + 1 });
+    }
+  }
+
+  return true;
+}
+
+export {
+  rawJobPreviewMaxDepth,
+  rawJobPreviewMaxEntries,
+  rawJobPreviewMaxKeyLength,
+  rawJobPreviewMaxStringLength,
+  rejectedJobsResponseSchema,
+};

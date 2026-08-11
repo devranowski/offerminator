@@ -116,6 +116,21 @@ describe('salaryRule', () => {
     expectRejectedSalary(annualSalary(120_000, 'XYZ'), 'SALARY_CURRENCY_UNSUPPORTED');
   });
 
+  it('keeps an unbounded unsupported currency value out of the diagnostic message', () => {
+    const currency = 'X'.repeat(10_000);
+    const result = evaluateSalary(annualSalary(120_000, currency));
+
+    expect(result.reasons).toEqual([
+      {
+        code: 'SALARY_CURRENCY_UNSUPPORTED',
+        field: 'salary.currency',
+        message: 'Salary currency is not supported.',
+        actualValue: currency,
+      },
+    ]);
+    expect(result.compensation).toBeNull();
+  });
+
   it('maps a conversion range failure to SALARY_INVALID', () => {
     const firstUnsafeUsdAmount = Math.floor(Number.MAX_SAFE_INTEGER / 100) + 1;
 

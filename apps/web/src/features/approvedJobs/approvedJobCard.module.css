@@ -1,7 +1,7 @@
 .jobCard {
   position: relative;
   overflow: hidden;
-  padding: var(--space-4) 18px 0;
+  padding: var(--space-4) 1.125rem 0;
   border: 1px solid var(--color-border);
   border-left: 3px solid var(--color-cleared-border);
   border-radius: var(--radius-md);
@@ -10,10 +10,10 @@
 
 .recordNumber {
   position: absolute;
-  top: 17px;
-  right: 118px;
+  top: 1.0625rem;
+  right: 7.375rem;
   color: var(--color-text-muted);
-  font: 500 9px/1 var(--font-mono);
+  font: 500 0.5625rem/1 var(--font-mono);
   letter-spacing: 0.06em;
   display: none;
 }
@@ -33,7 +33,7 @@
 .jobTitle {
   margin: 0;
   color: var(--color-text);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   letter-spacing: -0.012em;
   line-height: 1.35;
@@ -41,30 +41,30 @@
 }
 
 .jobCompany {
-  margin: 2px 0 0;
+  margin: 0.125rem 0 0;
   color: var(--color-text-muted);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .statusMarker {
   display: inline-flex;
-  min-height: 24px;
+  min-height: 1.5rem;
   flex: 0 0 auto;
   align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
+  gap: 0.3125rem;
+  padding: 0.1875rem 0.5rem;
   border: 1px solid var(--color-success-border);
   border-radius: var(--radius-sm);
   color: var(--color-success);
   background: var(--color-success-surface);
-  font: 600 10px/1.2 var(--font-mono);
+  font: 600 0.625rem/1.2 var(--font-mono);
   letter-spacing: 0.045em;
   text-transform: uppercase;
 }
 
 .statusMarker svg {
-  width: 13px;
-  height: 13px;
+  width: 0.8125rem;
+  height: 0.8125rem;
   fill: none;
   stroke: currentColor;
   stroke-linecap: square;
@@ -76,8 +76,8 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-5);
-  margin: 13px -18px 0;
-  padding: 11px 18px 12px;
+  margin: 0.8125rem -1.125rem 0;
+  padding: 0.6875rem 1.125rem 0.75rem;
   border-top: 1px solid var(--color-border);
   background: var(--color-surface-subtle);
 }
@@ -87,23 +87,23 @@
 }
 
 .jobMeta dt {
-  margin-bottom: 3px;
+  margin-bottom: 0.1875rem;
   color: var(--color-text-muted);
-  font: 500 9px/1.4 var(--font-mono);
+  font: 500 0.5625rem/1.4 var(--font-mono);
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 
 .jobMeta dd {
   margin: 0;
-  font: 500 12px/1.45 var(--font-mono);
+  font: 500 0.75rem/1.45 var(--font-mono);
   overflow-wrap: anywhere;
 }
 
 .jobMeta small {
   display: block;
   color: var(--color-text-muted);
-  font: 400 10px/1.45 var(--font-mono);
+  font: 400 0.625rem/1.45 var(--font-mono);
 }
 
 .unavailable {
@@ -136,7 +136,7 @@
 
   .jobHeader {
     flex-direction: row;
-    gap: 92px;
+    gap: 5.75rem;
   }
 }
 

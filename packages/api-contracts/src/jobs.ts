@@ -61,9 +61,14 @@ const jobSchema = z.object({
   postingDate: z.iso.date().nullable(),
 });
 
-const jobsResponseSchema = z.object({
-  items: z.array(jobSchema).readonly(),
-  total: nonnegativeIntegerSchema,
-}) satisfies z.ZodType<JobsResponseDto>;
+const jobsResponseSchema = z
+  .object({
+    items: z.array(jobSchema).readonly(),
+    total: nonnegativeIntegerSchema,
+  })
+  .refine(({ items, total }) => total === items.length, {
+    message: 'Total must match the number of items.',
+    path: ['total'],
+  }) satisfies z.ZodType<JobsResponseDto>;
 
 export { jobsResponseSchema };

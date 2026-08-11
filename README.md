@@ -4,6 +4,10 @@ Offerminator ingests a heterogeneous JSON job feed, normalizes each field indepe
 
 Human decisions have been removed from job screening. Approval is automatic against explicit, deterministic rules; there is no manual-review workflow. The UI names the two outcomes **Cleared** and **Terminated**, but these are presentation labels for approved and rejected records, not mutable workflow states.
 
+![Offerminator Cleared jobs view](docs/offerminatorOverview.png)
+
+The restrained **Steel / Ember** presentation gives the two automatic outcomes distinct visual identities without turning them into a manual workflow: steel and cyan structure the Cleared view, retro green marks successful approval, and ember identifies Terminated records. The Terminator-inspired language is confined to presentation; controls remain literal and the domain continues to use approved/rejected terminology.
+
 ## Overview
 
 The project is a strict TypeScript monorepo with three npm workspaces:
@@ -12,7 +16,7 @@ The project is a strict TypeScript monorepo with three npm workspaces:
 - `packages/api-contracts` — shared Zod response schemas and transport types used by both applications;
 - `apps/web` — a React and Vite interface backed by TanStack Query.
 
-The application intentionally minimizes infrastructure. It invests instead in explicit domain models, fail-closed handling of uncertain input, deterministic money and date comparisons, stable reason codes, and focused tests. The bundled `data/jobs.json` is ingested once during bootstrap, before Fastify starts listening, so the first request sees a complete result.
+The application intentionally minimizes infrastructure. It invests instead in explicit domain models, fail-closed handling of uncertain input, deterministic money and date comparisons, stable reason codes, and focused tests. The assignment supplies one heterogeneous JSON array containing flat, structured, and hybrid record representations; the unchanged bundled `data/jobs.json` preserves that feed and is ingested once during bootstrap, before Fastify starts listening.
 
 ## Quick start
 
@@ -41,6 +45,8 @@ The defaults require no environment configuration. If the API port is changed fo
 PORT=3100 OFFERMINATOR_API_PROXY_TARGET=http://localhost:3100 npm run dev
 ```
 
+Press `Ctrl+C` in the development terminal to stop both processes.
+
 Run the quality gates separately with:
 
 ```bash
@@ -61,7 +67,7 @@ npm run build
 7. Sort by **Newest first**.
 8. Confirm Growth Marketing Manager is last because its posting date is `null`.
 9. Focus the result tabs and open **Terminated** with Arrow Right or End.
-10. Find OpsFlex, inspect all four rejection reasons, and open its raw JSON.
+10. Find OpsFlex, inspect all four rejection reasons, and open its bounded raw preview.
 11. Confirm the Terminated view exposes no mutation action.
 
 ## Architecture
@@ -100,7 +106,7 @@ The API and frontend share response schemas, but not domain objects. Fastify ser
 
 1. `FileSystemJobSourceLoader` reads configured files concurrently and classifies source failures as `FILE_NOT_FOUND`, `INVALID_JSON`, `ROOT_NOT_ARRAY`, or `READ_ERROR`.
 2. Each array element receives a stable envelope containing `source`, zero-based `sourceIndex`, `id`, and the untouched payload.
-3. `normalizeJob` validates only the top-level record shape, then normalizes strings, location, salary, enums, and posting date independently. Flat, structured, and hybrid records can therefore contribute every valid field they contain.
+3. `normalizeJob` validates only the top-level record shape, then normalizes strings, location, salary, enums, and posting date independently. The single supplied array deliberately mixes flat, structured, and hybrid representations, so every record can contribute each valid field it contains.
 4. `ApprovalPolicy` creates a fresh `ApprovalContext` for the record and runs all six rules. It aggregates every rejection reason instead of stopping at the first failure.
 5. An approved candidate passes through the `ApprovedJob` factory and is stored in the approved repository. A rejected candidate retains its raw payload, stable reason codes, and normalization warnings in the rejected repository and emits one structured log event.
 6. The service produces a per-source and aggregate summary. Bootstrap awaits the entire ingestion before calling `listen`.
@@ -145,13 +151,14 @@ The rules return a uniform list of reasons. Salary calculation additionally reco
 ## Assumptions
 
 - A flat numeric salary is interpreted as an annual USD salary.
-- A structured salary requires a positive finite numeric `value` and a currency. Currency identifiers are trimmed and canonicalized to uppercase during ingestion.
+- A structured salary requires a positive finite numeric `value` and a currency. Exactly three ASCII letters are canonicalized to uppercase during ingestion; non-ASCII identifiers cannot fold into a supported currency and remain unsupported.
 - A structured salary defaults to `annual` only when `unit` is absent or `undefined`. An explicit invalid value, including `null`, is not defaulted and becomes `Salary.unknown`.
 - Hourly salary is annualized with `40 hours/week * 52 weeks = 2,080 hours/year`.
 - Missing, `undefined`, or blank optional `posting_date` produces `null` without a warning. A non-empty invalid value produces an `INVALID_POSTING_DATE` warning but does not itself reject the job.
 - Posting dates are calendar strings in strict `YYYY-MM-DD` form. They are not converted through `Date`, so timezone cannot change the represented day.
 - Input strings are trimmed; absent, non-string, and blank optional strings normalize to `null`.
 - Source indices are zero-based and become part of IDs such as `jobs.json:19`.
+- The brief's closing reference to "both feeds" is interpreted against the supplied artifact: one JSON array that mixes structured, flat, and hybrid record representations. Bootstrap preserves that unchanged array as one source; the loader itself accepts multiple configured files.
 - TypeScript and Fastify were selected to keep the implementation in a strongly owned stack while providing runtime validation at the I/O boundaries.
 
 ## Fixed currency rates
@@ -246,12 +253,12 @@ Salary sort compares the precomputed `annualizedSalaryUsdCents`, so annual and h
 
 All endpoints are read-only:
 
-| Method | Path                     | Purpose                                                                       |
-| ------ | ------------------------ | ----------------------------------------------------------------------------- |
-| `GET`  | `/api/health`            | Liveness response: `{ "status": "ok" }`                                       |
-| `GET`  | `/api/ingestion-summary` | Aggregate and per-source result of the completed bootstrap ingestion          |
-| `GET`  | `/api/jobs`              | Approved jobs with optional `q`, `country`, and `sort` query parameters       |
-| `GET`  | `/api/rejected-jobs`     | All rejected jobs with source reference, reason codes/messages, and raw input |
+| Method | Path                     | Purpose                                                                     |
+| ------ | ------------------------ | --------------------------------------------------------------------------- |
+| `GET`  | `/api/health`            | Liveness response: `{ "status": "ok" }`                                     |
+| `GET`  | `/api/ingestion-summary` | Aggregate and per-source result of the completed bootstrap ingestion        |
+| `GET`  | `/api/jobs`              | Approved jobs with optional `q`, `country`, and `sort` query parameters     |
+| `GET`  | `/api/rejected-jobs`     | All rejected jobs with source reference, reasons, and a bounded raw preview |
 
 Example:
 
@@ -259,7 +266,9 @@ Example:
 curl 'http://localhost:3000/api/jobs?q=engineer&country=US&sort=salary-desc'
 ```
 
-Invalid query parameters return `400` with a generic transport error. Unexpected route failures return `500` without exposing the internal cause. Domain objects are mapped to dedicated DTOs: internal `actualValue` fields and normalization warnings are not exposed by the rejected-jobs endpoint.
+Invalid query parameters return `400` with a generic transport error. Unexpected route failures return `500` without exposing the internal cause. Domain objects are mapped to dedicated DTOs: internal `actualValue` fields and normalization warnings are not exposed by the rejected-jobs endpoint, and an unsupported currency is not interpolated into its public reason message.
+
+Both non-paginated collection schemas require `total` to equal `items.length`. The rejected endpoint keeps the complete raw value inside the domain and storage boundary, while the transport exposes only a size-bounded diagnostic preview with an explicit truncation flag when a depth, width, entry, key, or string limit is reached.
 
 There are no mutation, approval, restore, edit, or delete endpoints.
 
@@ -354,10 +363,12 @@ AI tools were used as an engineering aid for exploration, implementation support
 
 The interface follows a mobile-first **Steel / Ember** direction: steel-toned surfaces, cyan for Cleared, ember for Terminated, sharp geometry, locally bundled IBM Plex Sans and IBM Plex Mono, and visible focus treatment. Named `min-width` custom media centralize breakpoints; feature styles do not repeat numeric breakpoint values or use desktop-first `max-width` queries.
 
-The browser client calls only relative `/api` paths. Vite proxies them to Fastify during development, avoiding a hardcoded backend URL in application code and avoiding local CORS configuration. Ingestion summary and list queries are independent, so a summary failure has its own retry and does not hide the job lists.
+The browser client calls only relative `/api` paths. Vite proxies them to Fastify during development, avoiding a hardcoded backend URL in application code and avoiding local CORS configuration. Ingestion summary and list queries are independent, so a summary failure has its own retry and does not hide the job lists. The Terminated collection is not requested until that tab is opened for the first time.
 
-Cleared implements success, loading, error, and empty states, plus an explicit updating state while debounced filters fetch a new result. Terminated is entirely read-only: it exposes every reason and a native `details`/`summary` disclosure for raw JSON, with internal horizontal scrolling and no record-level action.
+Cleared implements success, loading, error, and empty states, plus an explicit updating state while debounced filters fetch a new result. Terminated is entirely read-only: it exposes every reason and a native `details`/`summary` disclosure for the bounded raw preview, with internal horizontal scrolling and no record-level action.
 
 Visible labels, semantic landmarks, text and glyph status cues, `aria-live`/`aria-busy` states, and `:focus-visible` styling avoid color-only or pointer-only interaction. Cleared and Terminated use automatic-activation tabs with roving `tabIndex`; Left, Right, Home, and End move and activate tabs, while native buttons retain Enter and Space behavior. The raw-record disclosure retains native keyboard semantics.
 
-Visual verification covers a 360 px mobile viewport and a 1,440 px desktop viewport, the intermediate named breakpoints, absence of page-level horizontal overflow, keyboard focus order, the read-only boundary, and internal scrolling of long raw JSON.
+Scalable typography, spacing, component dimensions, and mobile-first breakpoints use `rem`, so enlarged browser defaults can influence both content and layout. Deliberate CSS-pixel exceptions are limited to technical hairlines, border/focus thickness, border overlap, and the visually-hidden recipe.
+
+Visual verification covers a 360 px mobile viewport and a 1,440 px desktop viewport, the intermediate named breakpoints, absence of page-level horizontal overflow, keyboard focus order, the read-only boundary, and internal scrolling of long raw previews. The 360 px check is repeated with the browser's default font enlarged to 32 px: header text and tabs reflow, while only the preview's code block scrolls horizontally.

@@ -10,6 +10,7 @@ import { AppShell } from './appShell.js';
 
 function App() {
   const [activeTab, setActiveTab] = useState<StatusTab>('cleared');
+  const [hasOpenedTerminated, setHasOpenedTerminated] = useState(false);
   const summaryQuery = useQuery({
     queryKey: ingestionSummaryQueryKey(),
     queryFn: ({ signal }) => fetchIngestionSummary(signal),
@@ -18,6 +19,14 @@ function App() {
 
   function retrySummary(): void {
     void summaryQuery.refetch();
+  }
+
+  function changeTab(tab: StatusTab): void {
+    setActiveTab(tab);
+
+    if (tab === 'terminated') {
+      setHasOpenedTerminated(true);
+    }
   }
 
   let summaryState: IngestionSummaryState;
@@ -34,8 +43,8 @@ function App() {
       activeTab={activeTab}
       clearedContent={<ApprovedJobsView />}
       summaryState={summaryState}
-      terminatedContent={<RejectedJobsView />}
-      onTabChange={setActiveTab}
+      terminatedContent={<RejectedJobsView isEnabled={hasOpenedTerminated} />}
+      onTabChange={changeTab}
     />
   );
 }

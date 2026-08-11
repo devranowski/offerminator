@@ -1,8 +1,11 @@
 import type { RejectedJobDto } from '@offerminator/api-contracts';
 
 import type { RejectedJob } from '../../models/rejectedJob.js';
+import { createRawJobPreview } from './rawJobPreview.js';
 
 function toRejectedJobDto(job: RejectedJob): RejectedJobDto {
+  const rawPreview = createRawJobPreview(job.raw);
+
   return {
     id: job.id,
     title: job.title,
@@ -14,7 +17,8 @@ function toRejectedJobDto(job: RejectedJob): RejectedJobDto {
       field: reason.field,
       message: reason.message,
     })),
-    raw: job.raw,
+    raw: rawPreview.value,
+    rawPreviewTruncated: rawPreview.truncated,
   };
 }
 

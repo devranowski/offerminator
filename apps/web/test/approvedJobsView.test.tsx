@@ -119,7 +119,7 @@ describe('approved jobs UI', () => {
     expect(
       await screen.findByRole('heading', { name: 'Ingestion summary unavailable.' }),
     ).toBeVisible();
-    expect(screen.getByText('Cleared jobs are still available below.')).toBeVisible();
+    expect(screen.getByText('Check the Cleared feed status below.')).toBeVisible();
     expect(await screen.findByRole('heading', { name: 'Customer Success Manager' })).toBeVisible();
     expect(jobsRequests(api.requests)).toHaveLength(1);
     expect(summaryRequests(api.requests)).toHaveLength(1);
@@ -133,6 +133,18 @@ describe('approved jobs UI', () => {
     ).toBeVisible();
     expect(summaryRequests(api.requests)).toHaveLength(2);
     expect(jobsRequests(api.requests)).toHaveLength(1);
+  });
+
+  it('reports summary and Cleared feed failures independently when both requests fail', async () => {
+    mockApi({ failJobsRequests: 1, failSummaryRequests: 1 });
+    renderApp();
+
+    expect(
+      await screen.findByRole('heading', { name: 'Ingestion summary unavailable.' }),
+    ).toBeVisible();
+    expect(screen.getByText('Check the Cleared feed status below.')).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Connection to Skynet lost.' })).toBeVisible();
+    expect(screen.getByText('Approved jobs could not be loaded.')).toBeVisible();
   });
 
   it('shows Germany as an empty result and Clear filters restores defaults and the full list', async () => {
@@ -161,6 +173,7 @@ describe('approved jobs UI', () => {
     expect(titleInput).toHaveValue('');
     expect(countrySelect).toHaveValue('');
     expect(sortSelect).toHaveValue('posting-date-desc');
+    expect(titleInput).toHaveFocus();
     await waitFor(() => expect(screen.getAllByRole('article')).toHaveLength(10));
     expect(jobsRequests(api.requests)).toContain('/api/jobs?sort=posting-date-desc');
   });

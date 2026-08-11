@@ -14,8 +14,15 @@ export type {
   SourceErrorDto,
   SourceSummaryDto,
 } from './ingestionSummary.js';
-export { rejectedJobsResponseSchema } from './rejectedJobs.js';
+export {
+  rawJobPreviewMaxDepth,
+  rawJobPreviewMaxEntries,
+  rawJobPreviewMaxKeyLength,
+  rawJobPreviewMaxStringLength,
+  rejectedJobsResponseSchema,
+} from './rejectedJobs.js';
 export type {
+  RawJobPreviewDto,
   RejectedJobDto,
   RejectedJobsResponseDto,
   RejectionCodeDto,

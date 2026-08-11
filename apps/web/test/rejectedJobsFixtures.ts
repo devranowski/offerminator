@@ -150,6 +150,7 @@ const rejectedJobs: readonly RejectedJobDto[] = rejectedJobRows.map((row) => ({
   sourceIndex: row.sourceIndex,
   reasons: row.reasons,
   raw: row.sourceIndex === 19 ? opsFlexRaw : { sourceIndex: row.sourceIndex },
+  rawPreviewTruncated: false,
 }));
 
 const fullRejectedJobsResponse: RejectedJobsResponseDto = {

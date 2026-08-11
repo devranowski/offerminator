@@ -13,9 +13,12 @@ afterEach(() => {
 
 describe('rejected jobs UI', () => {
   it('renders all ten API-shaped records with every reason and read-only markers', async () => {
-    mockApi();
+    const api = mockApi();
     const user = userEvent.setup();
     renderApp();
+
+    expect(await screen.findByRole('heading', { name: 'Customer Success Manager' })).toBeVisible();
+    expect(rejectedJobsRequests(api.requests)).toHaveLength(0);
 
     await user.click(screen.getByRole('tab', { name: /Terminated/u }));
 
@@ -49,10 +52,11 @@ describe('rejected jobs UI', () => {
     expect(
       within(panel).queryByText(/approve|restore|edit|delete|retry record/iu),
     ).not.toBeInTheDocument();
+    expect(rejectedJobsRequests(api.requests)).toHaveLength(1);
   });
 
   it('shows OpsFlex with its four exact reasons and a native raw-record disclosure', async () => {
-    mockApi();
+    const api = mockApi();
     const user = userEvent.setup();
     renderApp();
 
@@ -75,6 +79,7 @@ describe('rejected jobs UI', () => {
     expect(summary.tagName).toBe('SUMMARY');
     expect(details).not.toBeNull();
     expect(details).not.toHaveAttribute('open');
+    expect(within(card).queryByLabelText('Raw record for Untitled job')).not.toBeInTheDocument();
 
     await user.click(summary);
 
@@ -84,10 +89,48 @@ describe('rejected jobs UI', () => {
       '"company": "OpsFlex"',
     );
 
+    await user.click(screen.getByRole('tab', { name: /Cleared/u }));
+    await user.click(screen.getByRole('tab', { name: /Terminated/u }));
+
+    expect(details).toHaveAttribute('open');
+    expect(rejectedJobsRequests(api.requests)).toHaveLength(1);
+
     await user.click(within(card).getByText('Hide raw record'));
 
     expect(details).not.toHaveAttribute('open');
     expect(within(card).getByText('Show raw record')).toBeVisible();
+    expect(within(card).queryByLabelText('Raw record for Untitled job')).not.toBeInTheDocument();
+  });
+
+  it('labels a truncated raw preview when its disclosure is open', async () => {
+    const truncatedResponse = {
+      ...fullRejectedJobsResponse,
+      items: fullRejectedJobsResponse.items.map((job) =>
+        job.sourceIndex === 19
+          ? {
+              ...job,
+              raw: { nested: '[Raw preview truncated]' },
+              rawPreviewTruncated: true,
+            }
+          : job,
+      ),
+    };
+    mockApi({ resolveRejectedJobs: () => truncatedResponse });
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('tab', { name: /Terminated/u }));
+
+    const card = await screen.findByRole('article', { name: 'Untitled job' });
+
+    expect(within(card).queryByText('Raw record preview is truncated.')).not.toBeInTheDocument();
+
+    await user.click(within(card).getByText('Show raw record'));
+
+    expect(within(card).getByText('Raw record preview is truncated.')).toBeVisible();
+    expect(within(card).getByLabelText('Raw record for Untitled job')).toHaveTextContent(
+      '[Raw preview truncated]',
+    );
   });
 
   it('implements automatic tabs with roving focus and all required navigation keys', async () => {
@@ -165,7 +208,7 @@ describe('rejected jobs UI', () => {
     expect(
       await screen.findByRole('heading', { name: 'Ingestion summary unavailable.' }),
     ).toBeVisible();
-    expect(screen.getByText('Terminated jobs are still available below.')).toBeVisible();
+    expect(screen.getByText('Check the Terminated feed status below.')).toBeVisible();
     expect(await screen.findByRole('heading', { name: 'Untitled job' })).toBeVisible();
   });
 });

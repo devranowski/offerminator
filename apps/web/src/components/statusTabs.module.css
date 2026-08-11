@@ -6,22 +6,23 @@
 
 .navigation > div {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-4);
 }
 
 .navigation button {
   display: inline-flex;
   min-width: 0;
-  min-height: 48px;
+  min-height: 3rem;
   align-items: center;
   gap: var(--space-2);
   margin: 0 0 -1px;
-  padding: 0 2px;
+  padding: 0 0.125rem;
   border: 0;
   border-bottom: 3px solid transparent;
   color: var(--color-text-muted);
   background: transparent;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
@@ -40,15 +41,15 @@
 
 .navigation span {
   display: inline-grid;
-  min-width: 24px;
-  height: 19px;
+  min-width: 1.5rem;
+  height: 1.1875rem;
   place-items: center;
-  padding: 0 5px;
+  padding: 0 0.3125rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
   background: var(--color-surface-subtle);
-  font: 500 9px/1 var(--font-mono);
+  font: 500 0.5625rem/1 var(--font-mono);
 }
 
 @media (--viewport-wide-mobile) {
@@ -57,7 +58,7 @@
   }
 
   .navigation > div {
-    gap: 30px;
+    gap: 1.875rem;
   }
 }
 

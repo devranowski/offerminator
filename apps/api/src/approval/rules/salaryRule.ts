@@ -82,7 +82,7 @@ function unsupportedCurrencyRejection(currency: string): RejectionReason {
   return {
     code: 'SALARY_CURRENCY_UNSUPPORTED',
     field: 'salary.currency',
-    message: `Salary currency ${currency} is not supported.`,
+    message: 'Salary currency is not supported.',
     actualValue: currency,
   };
 }

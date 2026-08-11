@@ -115,8 +115,8 @@ function SummaryContent({ activeTab, state }: SummaryContentProps) {
         <h1 id="summary-title">Ingestion summary unavailable.</h1>
         <p>
           {activeTab === 'cleared'
-            ? 'Cleared jobs are still available below.'
-            : 'Terminated jobs are still available below.'}
+            ? 'Check the Cleared feed status below.'
+            : 'Check the Terminated feed status below.'}
         </p>
         <button className={styles.summaryRetry} type="button" onClick={state.onRetry}>
           Retry summary

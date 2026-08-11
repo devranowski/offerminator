@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { JobSortDto } from '@offerminator/api-contracts';
 
@@ -10,6 +10,7 @@ import styles from './approvedJobsView.module.css';
 interface FiltersProps {
   readonly country: CountryFilter;
   readonly sort: JobSortDto;
+  readonly titleInputRef: RefObject<HTMLInputElement | null>;
   readonly titleQuery: string;
   readonly onCountryChange: (country: CountryFilter) => void;
   readonly onSortChange: (sort: JobSortDto) => void;
@@ -32,6 +33,7 @@ function ApprovedJobsView() {
   const [debouncedTitleQuery, setDebouncedTitleQuery] = useState('');
   const [country, setCountry] = useState<CountryFilter>('');
   const [sort, setSort] = useState<JobSortDto>(DEFAULT_SORT);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -61,6 +63,7 @@ function ApprovedJobsView() {
     setDebouncedTitleQuery('');
     setCountry('');
     setSort(DEFAULT_SORT);
+    titleInputRef.current?.focus();
   }
 
   function retry(): void {
@@ -83,6 +86,7 @@ function ApprovedJobsView() {
       <Filters
         country={country}
         sort={sort}
+        titleInputRef={titleInputRef}
         titleQuery={titleQuery}
         onCountryChange={setCountry}
         onSortChange={setSort}
@@ -119,6 +123,7 @@ function ApprovedJobsView() {
 function Filters({
   country,
   sort,
+  titleInputRef,
   titleQuery,
   onCountryChange,
   onSortChange,
@@ -134,6 +139,7 @@ function Filters({
           <label htmlFor="job-title">Job title</label>
           <input
             id="job-title"
+            ref={titleInputRef}
             type="search"
             placeholder="Search by title"
             value={titleQuery}

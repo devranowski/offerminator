@@ -4,6 +4,7 @@ import { glob, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 import postcss from 'postcss';
+import type { AtRule, Declaration } from 'postcss';
 import { describe, expect, it } from 'vitest';
 
 import { createViteConfig } from '../vite.config.js';
@@ -15,11 +16,12 @@ interface CssSource {
 
 interface BreakpointDefinition {
   readonly name: string;
-  readonly width: number;
+  readonly widthRem: number;
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../src/', import.meta.url));
 const BREAKPOINTS_PATH = 'styles/breakpoints.css';
+const GLOBAL_STYLES_PATH = 'styles/global.css';
 const FORCED_COLORS_MEDIA_CONDITION = '(forced-colors: active)';
 
 describe('responsive CSS contract', () => {
@@ -37,7 +39,7 @@ describe('responsive CSS contract', () => {
     const definedNames = new Set(definitions.map(({ name }) => name));
 
     expect(definitions).toHaveLength(3);
-    expect(new Set(definitions.map(({ name }) => name)).size).toBe(definitions.length);
+    expect(definedNames.size).toBe(definitions.length);
     expect(definitions.every(({ name }) => name.startsWith('--viewport-'))).toBe(true);
 
     for (let index = 1; index < definitions.length; index += 1) {
@@ -48,7 +50,7 @@ describe('responsive CSS contract', () => {
         throw new Error('Breakpoint definition order is incomplete.');
       }
 
-      expect(current.width).toBeGreaterThan(previous.width);
+      expect(current.widthRem).toBeGreaterThan(previous.widthRem);
     }
 
     for (const source of sources) {
@@ -70,8 +72,8 @@ describe('responsive CSS contract', () => {
         expect(definedNames.has(readCustomMediaName(condition))).toBe(true);
       }
 
-      for (const { width } of definitions) {
-        expect(source.contents).not.toContain(`${String(width)}px`);
+      for (const { widthRem } of definitions) {
+        expect(source.contents).not.toContain(`${String(widthRem)}rem`);
       }
     }
   });
@@ -93,8 +95,53 @@ describe('responsive CSS contract', () => {
       from: undefined,
     });
 
-    expect(result.css).toContain(`@media (min-width: ${String(breakpoint.width)}px)`);
+    expect(result.css).toContain(`@media (min-width: ${String(breakpoint.widthRem)}rem)`);
     expect(result.css).not.toMatch(/@media\s*\(\s*--viewport-/u);
+  });
+
+  it('keeps CSS pixels only for technical rendering details', async () => {
+    const sources = await readCssSources();
+    const violations: string[] = [];
+
+    for (const source of sources) {
+      const root = postcss.parse(source.contents, { from: source.relativePath });
+
+      root.walkDecls((declaration) => {
+        if (declaration.value.includes('px') && !isAllowedCssPixelDeclaration(declaration)) {
+          violations.push(`${source.relativePath}: ${declaration.toString()}`);
+        }
+      });
+    }
+
+    expect(violations).toEqual([]);
+  });
+
+  it('restores a system outline when forced colors remove the regular focus ring', async () => {
+    const contents = await readFile(new URL('../src/styles/global.css', import.meta.url), 'utf8');
+    const root = postcss.parse(contents, { from: GLOBAL_STYLES_PATH });
+    let forcedColorsRule: AtRule | undefined;
+
+    root.walkAtRules('media', (rule) => {
+      if (rule.params === FORCED_COLORS_MEDIA_CONDITION) {
+        forcedColorsRule = rule;
+      }
+    });
+
+    expect(forcedColorsRule).toBeDefined();
+
+    if (forcedColorsRule === undefined) {
+      throw new Error('Missing forced-colors focus fallback.');
+    }
+
+    const ruleText = forcedColorsRule.toString();
+
+    for (const selector of ['button', 'input', 'select', 'summary', 'pre']) {
+      expect(ruleText).toContain(`${selector}:focus-visible`);
+    }
+
+    expect(ruleText).toMatch(/outline:\s*2px solid CanvasText;/u);
+    expect(ruleText).toMatch(/outline-offset:\s*2px;/u);
+    expect(ruleText).toMatch(/box-shadow:\s*none;/u);
   });
 });
 
@@ -114,15 +161,15 @@ async function readCssSources(): Promise<readonly CssSource[]> {
 }
 
 function readBreakpointDefinitions(contents: string): readonly BreakpointDefinition[] {
-  return [...contents.matchAll(/@custom-media\s+(--[a-z-]+)\s+\(min-width:\s*(\d+)px\);/gu)].map(
-    ([, name, width]) => {
-      if (name === undefined || width === undefined) {
-        throw new Error('Breakpoint definition is incomplete.');
-      }
+  return [
+    ...contents.matchAll(/@custom-media\s+(--[a-z-]+)\s+\(min-width:\s*(\d+(?:\.\d+)?)rem\);/gu),
+  ].map(([, name, widthRem]) => {
+    if (name === undefined || widthRem === undefined) {
+      throw new Error('Breakpoint definition is incomplete.');
+    }
 
-      return { name, width: Number(width) };
-    },
-  );
+    return { name, widthRem: Number(widthRem) };
+  });
 }
 
 function readMediaConditions(contents: string): readonly string[] {
@@ -144,4 +191,36 @@ function readCustomMediaName(condition: string): string {
   }
 
   return name;
+}
+
+function isAllowedCssPixelDeclaration(declaration: Declaration): boolean {
+  const values = [...declaration.value.matchAll(/(-?\d+(?:\.\d+)?)px/gu)].map(([, value]) =>
+    Number(value),
+  );
+
+  if (values.length === 0) {
+    return true;
+  }
+
+  if (/^border(?:-(?:top|right|bottom|left))?$/u.test(declaration.prop)) {
+    return values.every((value) => value === 1 || value === 3);
+  }
+
+  if (declaration.prop === 'outline' || declaration.prop === 'outline-offset') {
+    return values.every((value) => value === 2);
+  }
+
+  if (declaration.prop === 'box-shadow' || declaration.prop === '--focus-ring') {
+    return values.every((value) => value === 2 || value === 5);
+  }
+
+  if (declaration.prop === 'width' || declaration.prop === 'height') {
+    return values.every((value) => value === 1);
+  }
+
+  if (declaration.prop === 'margin') {
+    return values.every((value) => value === -1);
+  }
+
+  return false;
 }

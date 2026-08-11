@@ -76,7 +76,7 @@ describe('API DTO mappers', () => {
     });
   });
 
-  it('exposes selected rejection details and raw input without warnings or actual values', () => {
+  it('exposes selected rejection details and a bounded raw preview without warnings', () => {
     const raw = {
       title: '',
       salary: null,
@@ -122,8 +122,10 @@ describe('API DTO mappers', () => {
         },
       ],
       raw,
+      rawPreviewTruncated: false,
     });
-    expect(dto.raw).toBe(raw);
+    expect(dto.raw).toEqual(raw);
+    expect(dto.raw).not.toBe(raw);
   });
 
   it('maps an ingestion summary into fresh transport collections', () => {

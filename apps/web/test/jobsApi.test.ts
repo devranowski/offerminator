@@ -1,3 +1,4 @@
+import { rawJobPreviewMaxDepth } from '@offerminator/api-contracts';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -23,6 +24,12 @@ describe('jobs API client response validation', () => {
       'fetch',
       vi.fn().mockResolvedValue(createJsonResponse({ items: [], total: 'not-a-number' })),
     );
+
+    await expect(fetchApprovedJobs(DEFAULT_QUERY)).rejects.toThrow();
+  });
+
+  it('rejects a successful approved-jobs response with a mismatched total', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(createJsonResponse({ items: [], total: 1 })));
 
     await expect(fetchApprovedJobs(DEFAULT_QUERY)).rejects.toThrow();
   });
@@ -96,6 +103,46 @@ describe('jobs API client response validation', () => {
               sourceIndex: 19,
               reasons: [{ code: 'NOT_A_REJECTION_CODE', field: 'title', message: 'Invalid.' }],
               raw: {},
+              rawPreviewTruncated: false,
+            },
+          ],
+          total: 1,
+        }),
+      ),
+    );
+
+    await expect(fetchRejectedJobs()).rejects.toThrow();
+  });
+
+  it('rejects a successful rejected-jobs response with a mismatched total', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(createJsonResponse({ items: [], total: 1 })));
+
+    await expect(fetchRejectedJobs()).rejects.toThrow();
+  });
+
+  it('rejects a raw preview that exceeds the shared transport depth', async () => {
+    let raw: unknown = 'leaf';
+
+    for (let depth = 0; depth <= rawJobPreviewMaxDepth; depth += 1) {
+      raw = { nested: raw };
+    }
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse({
+          items: [
+            {
+              id: 'jobs.json:19',
+              title: null,
+              company: 'OpsFlex',
+              source: 'jobs.json',
+              sourceIndex: 19,
+              reasons: [
+                { code: 'TITLE_MISSING', field: 'title', message: 'Title must not be empty.' },
+              ],
+              raw,
+              rawPreviewTruncated: true,
             },
           ],
           total: 1,

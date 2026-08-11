@@ -3,6 +3,8 @@ import { z } from 'zod/v4';
 import { createCountryCode } from '../../models/countryCode.js';
 import type { JobSort, SearchJobsQuery } from '../../search/searchQuery.js';
 
+const ASCII_COUNTRY_CODE_PATTERN = /^[A-Za-z]{2}$/u;
+
 const JOB_SORTS = [
   'salary-asc',
   'salary-desc',
@@ -11,7 +13,10 @@ const JOB_SORTS = [
 ] as const satisfies readonly JobSort[];
 
 const countrySchema = z.string().transform((value, context) => {
-  const country = createCountryCode(value.trim().toUpperCase());
+  const trimmedCountry = value.trim();
+  const country = ASCII_COUNTRY_CODE_PATTERN.test(trimmedCountry)
+    ? createCountryCode(trimmedCountry.toUpperCase())
+    : null;
 
   if (country === null) {
     context.addIssue({

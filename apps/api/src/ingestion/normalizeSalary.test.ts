@@ -57,6 +57,15 @@ describe('normalizeSalary', () => {
     });
   });
 
+  it('does not fold a non-ASCII currency identifier into a supported currency', () => {
+    expect(normalizeSalary({ value: 120_000, currency: 'uſd' })).toEqual({
+      kind: 'annual',
+      amount: 120_000,
+      currency: 'uſd',
+      source: 'explicit',
+    });
+  });
+
   it.each([undefined, null])('maps missing salary %j to reason missing', (value) => {
     expect(normalizeSalary(value)).toEqual({ kind: 'unknown', reason: 'missing', raw: value });
   });
