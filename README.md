@@ -4,8 +4,6 @@ Offerminator ingests a heterogeneous JSON job feed, normalizes each field indepe
 
 Human decisions have been removed from job screening. Approval is automatic against explicit, deterministic rules; there is no manual-review workflow. The UI names the two outcomes **Cleared** and **Terminated**, but these are presentation labels for approved and rejected records, not mutable workflow states.
 
-![Offerminator Cleared jobs view](docs/offerminatorOverview.png)
-
 The restrained **Steel / Ember** presentation gives the two automatic outcomes distinct visual identities without turning them into a manual workflow: steel and cyan structure the Cleared view, retro green marks successful approval, and ember identifies Terminated records. The Terminator-inspired language is confined to presentation; controls remain literal and the domain continues to use approved/rejected terminology.
 
 ## Overview
@@ -56,6 +54,17 @@ npm test
 npm run build
 ```
 
+### Production container
+
+The production image builds all workspaces and serves the generated React assets and the read-only API from one Fastify process and one origin:
+
+```bash
+docker build --tag offerminator .
+docker run --rm --publish 3000:10000 --env PORT=10000 offerminator
+```
+
+Open `http://localhost:3000`. The container binds to `0.0.0.0:10000`, runs as the unprivileged `node` user, and exposes `/api/health` for deployment health checks.
+
 ## Demo flow
 
 1. Start the API and frontend with `npm run dev`.
@@ -97,6 +106,8 @@ flowchart TD
 ```
 
 `bootstrap.ts` is the composition root. It creates the fixed-rate currency converter, compensation policy, approval policy, repositories, ingestion service, search service, and logger adapter. The core depends on small ports rather than Fastify or Pino; HTTP routes and logging are adapters around the application and domain logic.
+
+During local development, Vite serves the frontend and proxies relative `/api` requests to Fastify. The production container instead gives Fastify an explicit frontend build directory: `/` serves the generated `index.html` without long-lived caching, fingerprinted assets receive immutable caching, and unknown paths remain `404` because the interface has no client-side router.
 
 The API and frontend share response schemas, but not domain objects. Fastify serializes against the Zod contracts, while the frontend receives network payloads as `unknown` and parses them with the same schemas before treating them as DTOs (Data Transfer Objects).
 
@@ -338,7 +349,7 @@ The existing boundaries allow focused upgrades without rewriting the approval ru
 - move ingestion to a job runner or queue, with explicit retry and partial-failure policy;
 - replace fixed FX with a versioned rate provider whose snapshot and effective time are stored with each decision;
 - add pagination and database/index-backed search when the dataset justifies it;
-- publish static frontend assets and route `/api` through the same-origin reverse proxy used in development;
+- place a CDN or reverse proxy in front of the existing same-origin production server if traffic or edge caching justifies it;
 - register OpenAPI deliberately if it becomes a delivery requirement, then document and test the published contract;
 - add metrics, tracing, and sink-level log redaction appropriate to the deployment's trust boundary;
 - add authentication and authorization before introducing any administrative or mutation capability;

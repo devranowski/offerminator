@@ -10,7 +10,7 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -39,3 +39,33 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Build production image
+        run: docker build --tag offerminator:ci .
+
+      - name: Smoke test production image
+        run: |
+          set -euo pipefail
+
+          docker run --detach --name offerminator-ci --publish 10000:10000 offerminator:ci
+
+          cleanup() {
+            exit_code=$?
+            if [ "$exit_code" -ne 0 ]; then
+              docker logs offerminator-ci || true
+            fi
+            docker rm --force offerminator-ci >/dev/null 2>&1 || true
+            exit "$exit_code"
+          }
+          trap cleanup EXIT
+
+          for attempt in {1..30}; do
+            if curl --fail --silent --connect-timeout 1 --max-time 2 http://127.0.0.1:10000/api/health > /tmp/offerminator-health.json; then
+              break
+            fi
+            sleep 1
+          done
+
+          grep --fixed-strings --quiet '{"status":"ok"}' /tmp/offerminator-health.json
+          curl --fail --silent http://127.0.0.1:10000/ > /tmp/offerminator-index.html
+          grep --fixed-strings --quiet '<div id="root"></div>' /tmp/offerminator-index.html

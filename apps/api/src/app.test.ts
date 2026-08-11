@@ -1,3 +1,7 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import type {
   IngestionSummaryDto,
   JobDto,
@@ -88,6 +92,53 @@ describe('Fastify API', () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json<{ readonly status: string }>()).toEqual({ status: 'ok' });
+  });
+
+  it('serves built frontend assets only when a frontend root is configured', async () => {
+    const responseWithoutFrontend = await context().app.inject({ method: 'GET', url: '/' });
+    const frontendRoot = await mkdtemp(join(tmpdir(), 'offerminator-frontend-'));
+    const assetsRoot = join(frontendRoot, 'assets');
+
+    await mkdir(assetsRoot);
+    await Promise.all([
+      writeFile(join(frontendRoot, 'index.html'), '<main id="root">Offerminator</main>'),
+      writeFile(join(assetsRoot, 'app-a1b2c3.js'), 'globalThis.offerminator = true;'),
+    ]);
+
+    const app = await buildApp(
+      {
+        searchService: { search: () => Promise.resolve([]) },
+        rejectedJobs: { findAll: () => Promise.resolve([]) },
+        ingestionService: { getLastSummary: () => null },
+      },
+      { frontendRoot },
+    );
+
+    try {
+      const [indexResponse, indexPathResponse, assetResponse, healthResponse, unknownResponse] =
+        await Promise.all([
+          app.inject({ method: 'GET', url: '/' }),
+          app.inject({ method: 'GET', url: '/index.html' }),
+          app.inject({ method: 'GET', url: '/assets/app-a1b2c3.js' }),
+          app.inject({ method: 'GET', url: '/api/health' }),
+          app.inject({ method: 'GET', url: '/unknown' }),
+        ]);
+
+      expect(responseWithoutFrontend.statusCode).toBe(404);
+      expect(indexResponse.statusCode).toBe(200);
+      expect(indexResponse.body).toBe('<main id="root">Offerminator</main>');
+      expect(indexResponse.headers['cache-control']).toBe('public, max-age=0');
+      expect(indexPathResponse.statusCode).toBe(200);
+      expect(indexPathResponse.headers['cache-control']).toBe('public, max-age=0');
+      expect(assetResponse.statusCode).toBe(200);
+      expect(assetResponse.headers['cache-control']).toBe('public, max-age=31536000, immutable');
+      expect(healthResponse.statusCode).toBe(200);
+      expect(healthResponse.json<{ readonly status: string }>()).toEqual({ status: 'ok' });
+      expect(unknownResponse.statusCode).toBe(404);
+    } finally {
+      await app.close();
+      await rm(frontendRoot, { recursive: true, force: true });
+    }
   });
 
   it('returns every approved job in the default order and maps a job without domain leakage', async () => {

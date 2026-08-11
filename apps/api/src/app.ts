@@ -1,5 +1,11 @@
+import fastifyStatic from '@fastify/static';
 import { serializerCompiler, validatorCompiler } from '@fastify/type-provider-zod';
-import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
+import Fastify, {
+  type FastifyInstance,
+  type FastifyReply,
+  type FastifyRequest,
+  type FastifyServerOptions,
+} from 'fastify';
 
 import type { IngestionService } from './ingestion/ingestionService.js';
 import type { JobSearchService } from './search/jobSearchService.js';
@@ -16,18 +22,47 @@ export interface AppDependencies {
   readonly ingestionService: Pick<IngestionService, 'getLastSummary'>;
 }
 
+type BuildAppOptions = FastifyServerOptions & {
+  readonly frontendRoot?: string;
+};
+
 async function buildApp(
   dependencies: AppDependencies,
-  options: FastifyServerOptions = {},
+  options: BuildAppOptions = {},
 ): Promise<FastifyInstance> {
-  const app = Fastify(options);
+  const { frontendRoot, ...serverOptions } = options;
+  const app = Fastify(serverOptions);
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
   registerApp(app, dependencies);
+
+  if (frontendRoot !== undefined) {
+    registerFrontend(app, frontendRoot);
+  }
+
   await app.ready();
 
   return app;
+}
+
+function registerFrontend(app: FastifyInstance, frontendRoot: string): void {
+  app.register(fastifyStatic, {
+    root: frontendRoot,
+    index: false,
+    maxAge: '1y',
+    immutable: true,
+  });
+
+  app.get('/', sendFrontendIndex);
+  app.get('/index.html', sendFrontendIndex);
+}
+
+function sendFrontendIndex(_request: FastifyRequest, reply: FastifyReply): FastifyReply {
+  return reply.sendFile('index.html', {
+    maxAge: 0,
+    immutable: false,
+  });
 }
 
 function registerApp(app: FastifyInstance, dependencies: AppDependencies): void {
