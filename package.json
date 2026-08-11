@@ -15,6 +15,7 @@
   "packageManager": "npm@11.17.0",
   "scripts": {
     "build": "npm run build --workspaces --if-present",
+    "dev": "concurrently --kill-others --names api,web \"npm run dev --workspace @offerminator/api\" \"npm run dev --workspace @offerminator/web\"",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@types/node": "24.13.3",
+    "concurrently": "10.0.4",
     "eslint": "10.8.1",
     "prettier": "3.9.6",
     "typescript": "6.0.3",
