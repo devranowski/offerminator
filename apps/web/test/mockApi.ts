@@ -1,7 +1,8 @@
-import type { JobsResponseDto } from '@offerminator/api-contracts';
+import type { JobsResponseDto, RejectedJobsResponseDto } from '@offerminator/api-contracts';
 import { vi } from 'vitest';
 
 import { fullJobsResponse, ingestionSummary, jobsByCountry } from './approvedJobsFixtures.js';
+import { fullRejectedJobsResponse } from './rejectedJobsFixtures.js';
 
 type TestFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
@@ -10,8 +11,10 @@ type ApiMockOptions =
   | {
       readonly mode?: 'settled';
       readonly failJobsRequests?: number;
+      readonly failRejectedJobsRequests?: number;
       readonly failSummaryRequests?: number;
       readonly resolveJobs?: (url: string) => JobsResponseDto;
+      readonly resolveRejectedJobs?: () => RejectedJobsResponseDto;
     };
 
 interface ApiMock {
@@ -21,6 +24,7 @@ interface ApiMock {
 function mockApi(options: ApiMockOptions = {}): ApiMock {
   const requests: string[] = [];
   let jobsRequestCount = 0;
+  let rejectedJobsRequestCount = 0;
   let summaryRequestCount = 0;
   const fetchMock = vi.fn<TestFetch>(async (input) => {
     const url = requestUrl(input);
@@ -54,6 +58,20 @@ function mockApi(options: ApiMockOptions = {}): ApiMock {
       return jsonResponse(options.resolveJobs?.(url) ?? fullJobsResponse);
     }
 
+    if (url === '/api/rejected-jobs') {
+      rejectedJobsRequestCount += 1;
+
+      if (options.mode === 'pending') {
+        return pendingResponse();
+      }
+
+      if (rejectedJobsRequestCount <= (options.failRejectedJobsRequests ?? 0)) {
+        return jsonResponse({ message: 'unavailable' }, 500);
+      }
+
+      return jsonResponse(options.resolveRejectedJobs?.() ?? fullRejectedJobsResponse);
+    }
+
     return jsonResponse({ message: `Unexpected request: ${url}` }, 404);
   });
 
@@ -80,6 +98,10 @@ function summaryRequests(requests: readonly string[]): string[] {
   return requests.filter((url) => url === '/api/ingestion-summary');
 }
 
+function rejectedJobsRequests(requests: readonly string[]): string[] {
+  return requests.filter((url) => url === '/api/rejected-jobs');
+}
+
 function pendingResponse(): Promise<Response> {
   return new Promise<Response>(() => undefined);
 }
@@ -103,4 +125,4 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-export { jobsRequests, mockApi, resolveCountryResponse, summaryRequests };
+export { jobsRequests, mockApi, rejectedJobsRequests, resolveCountryResponse, summaryRequests };

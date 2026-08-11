@@ -1,11 +1,15 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { fetchIngestionSummary, ingestionSummaryQueryKey } from '../api/jobsApi.js';
+import type { StatusTab } from '../components/statusTabs.js';
 import { ApprovedJobsView } from '../features/approvedJobs/approvedJobsView.js';
+import { RejectedJobsView } from '../features/rejectedJobs/rejectedJobsView.js';
 import type { IngestionSummaryState } from './appShell.js';
 import { AppShell } from './appShell.js';
 
 function App() {
+  const [activeTab, setActiveTab] = useState<StatusTab>('cleared');
   const summaryQuery = useQuery({
     queryKey: ingestionSummaryQueryKey(),
     queryFn: ({ signal }) => fetchIngestionSummary(signal),
@@ -26,9 +30,13 @@ function App() {
   }
 
   return (
-    <AppShell summaryState={summaryState}>
-      <ApprovedJobsView />
-    </AppShell>
+    <AppShell
+      activeTab={activeTab}
+      clearedContent={<ApprovedJobsView />}
+      summaryState={summaryState}
+      terminatedContent={<RejectedJobsView />}
+      onTabChange={setActiveTab}
+    />
   );
 }
 

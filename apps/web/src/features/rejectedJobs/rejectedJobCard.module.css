@@ -1,0 +1,173 @@
+.rejectionCard {
+  position: relative;
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-terminated-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.recordNumber {
+  position: absolute;
+  top: 17px;
+  right: 136px;
+  display: none;
+  color: var(--color-text-muted);
+  font: 500 9px/1 var(--font-mono);
+  letter-spacing: 0.06em;
+}
+
+.rejectionHeader {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.rejectionHeader > div {
+  min-width: 0;
+}
+
+.jobTitle {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.jobCompany {
+  margin: 2px 0 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.sourceReference {
+  display: inline-block;
+  margin-top: var(--space-2);
+  padding: 2px 5px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  background: var(--color-surface-subtle);
+  font: 500 10px/1.4 var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.statusMarker {
+  display: inline-flex;
+  min-height: 24px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid var(--color-terminated-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-terminated);
+  background: var(--color-terminated-surface);
+  font: 600 10px/1.2 var(--font-mono);
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.statusMarker svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  stroke-width: 2;
+}
+
+.reasons {
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid var(--color-border);
+}
+
+.reasons h3 {
+  margin: 0 0 9px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.reasonList {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reasonItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-1);
+  padding: 7px 9px;
+  border-left: 3px solid var(--color-terminated-border);
+  background: var(--color-terminated-surface);
+}
+
+.reasonCode {
+  color: var(--color-terminated);
+  font: 600 10px/1.45 var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.reasonMessage {
+  color: var(--color-text);
+  font-size: 12px;
+}
+
+.rawDisclosure {
+  min-width: 0;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.rawDisclosure summary {
+  width: fit-content;
+  color: var(--color-text);
+  font: 600 11px/1.5 var(--font-mono);
+}
+
+.rawJson {
+  max-width: 100%;
+  margin: var(--space-3) 0 0;
+  padding: var(--space-4);
+  overflow-x: auto;
+  border: 1px solid var(--color-neutral-700);
+  border-radius: var(--radius-sm);
+  color: var(--color-code-text);
+  background: var(--color-code-background);
+  font: 400 11px/1.6 var(--font-mono);
+  tab-size: 2;
+}
+
+.rawJson code {
+  font: inherit;
+}
+
+@media (--viewport-tablet) {
+  .recordNumber {
+    display: block;
+  }
+
+  .rejectionHeader {
+    flex-direction: row;
+    gap: 110px;
+  }
+}
+
+@media (--viewport-desktop) {
+  .reasonItem {
+    grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.2fr);
+    gap: var(--space-4);
+    align-items: baseline;
+  }
+}

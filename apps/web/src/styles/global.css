@@ -16,18 +16,22 @@ body {
 
 button,
 input,
-select {
+select,
+summary {
   font: inherit;
 }
 
 button,
-select {
+select,
+summary {
   cursor: pointer;
 }
 
 button:focus-visible,
 input:focus-visible,
-select:focus-visible {
+select:focus-visible,
+summary:focus-visible,
+pre:focus-visible {
   outline: 0;
   box-shadow: var(--focus-ring);
 }

@@ -26,6 +26,14 @@
   background: var(--color-header);
 }
 
+.offerminator[data-view='terminated'] .siteHeader {
+  border-bottom-color: var(--color-terminated);
+}
+
+.offerminator[data-view='terminated'] .systemLabel::before {
+  background: var(--color-terminated);
+}
+
 .productName,
 .tagline,
 .systemLabel,
@@ -68,56 +76,16 @@
   content: '';
 }
 
-.statusOverview {
-  padding: 0 var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
-.statusOverview > div {
-  display: flex;
-  gap: var(--space-5);
-}
-
-.currentStatus,
-.futureStatus {
-  display: inline-flex;
-  min-height: 48px;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0 0 -1px;
-  padding: 0 2px;
-  border-bottom: 3px solid transparent;
-  color: var(--color-text-muted);
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.currentStatus {
-  border-bottom-color: var(--color-cleared);
-  color: var(--color-text);
-  font-weight: 700;
-}
-
-.currentStatus > span,
-.futureStatus > span {
-  display: inline-grid;
-  min-width: 24px;
-  height: 19px;
-  place-items: center;
-  padding: 0 5px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
-  background: var(--color-surface-subtle);
-  font: 500 9px/1 var(--font-mono);
-}
-
 .summaryStrip {
   display: grid;
   grid-template-columns: 46px minmax(0, 1fr);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-neutral-200);
+}
+
+.offerminator[data-view='terminated'] .summaryIndex {
+  color: var(--color-terminated);
+  background: var(--color-terminated-surface);
 }
 
 .summaryIndex {
@@ -188,13 +156,9 @@
     font-size: 28px;
   }
 
-  .statusOverview,
   .mainContent,
   .footer {
     padding-inline: var(--space-5);
-  }
-  .statusOverview > div {
-    gap: 30px;
   }
 
   .summaryStrip {
@@ -226,7 +190,6 @@
     margin-top: 4px;
   }
 
-  .statusOverview,
   .mainContent,
   .footer {
     padding-inline: var(--space-6);

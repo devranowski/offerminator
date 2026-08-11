@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   fetchApprovedJobs,
   fetchIngestionSummary,
+  fetchRejectedJobs,
   type ApprovedJobsQuery,
 } from '../src/api/jobsApi.js';
 
@@ -79,6 +80,30 @@ describe('jobs API client response validation', () => {
     );
 
     await expect(fetchIngestionSummary()).rejects.toThrow();
+  });
+
+  it('rejects a successful rejected-jobs response with an invalid body', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        createJsonResponse({
+          items: [
+            {
+              id: 'jobs.json:19',
+              title: null,
+              company: 'OpsFlex',
+              source: 'jobs.json',
+              sourceIndex: 19,
+              reasons: [{ code: 'NOT_A_REJECTION_CODE', field: 'title', message: 'Invalid.' }],
+              raw: {},
+            },
+          ],
+          total: 1,
+        }),
+      ),
+    );
+
+    await expect(fetchRejectedJobs()).rejects.toThrow();
   });
 });
 

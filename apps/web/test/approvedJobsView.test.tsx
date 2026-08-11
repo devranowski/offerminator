@@ -1,12 +1,11 @@
 import type { JobSortDto } from '@offerminator/api-contracts';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { App } from '../src/app/app.js';
 import { hourlyJob, nullableJob } from './approvedJobsFixtures.js';
 import { jobsRequests, mockApi, resolveCountryResponse, summaryRequests } from './mockApi.js';
+import { renderApp } from './renderApp.js';
 
 type CountryScenario = readonly [label: string, code: 'CA' | 'DE' | 'GB' | 'US', total: number];
 type SortExpectation = readonly [sort: JobSortDto, label: string];
@@ -222,21 +221,3 @@ describe('approved jobs UI', () => {
     },
   );
 });
-
-function renderApp(): void {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        gcTime: 0,
-        refetchOnWindowFocus: false,
-        retry: false,
-      },
-    },
-  });
-
-  render(
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>,
-  );
-}
