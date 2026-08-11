@@ -8,6 +8,12 @@ import { jobsRequests, mockApi, resolveCountryResponse, summaryRequests } from '
 import { renderApp } from './renderApp.js';
 
 type CountryScenario = readonly [label: string, code: 'CA' | 'DE' | 'GB' | 'US', total: number];
+type InstantFilterScenario = readonly [
+  filter: string,
+  controlName: 'Country' | 'Sort',
+  optionValue: 'CA' | 'salary-asc',
+  requestUrl: string,
+];
 type SortExpectation = readonly [sort: JobSortDto, label: string];
 
 const countryScenarios: readonly CountryScenario[] = [
@@ -22,6 +28,11 @@ const sortExpectations: readonly SortExpectation[] = [
   ['posting-date-asc', 'Oldest first'],
   ['salary-desc', 'Highest salary'],
   ['salary-asc', 'Lowest salary'],
+];
+
+const instantFilterScenarios: readonly InstantFilterScenario[] = [
+  ['country', 'Country', 'CA', '/api/jobs?country=CA&sort=posting-date-desc'],
+  ['sort', 'Sort', 'salary-asc', '/api/jobs?sort=salary-asc'],
 ];
 
 afterEach(() => {
@@ -196,6 +207,7 @@ describe('approved jobs UI', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('10 matching jobs');
     expect(screen.getByText('Updating matching jobs')).toBeInTheDocument();
+    expect(screen.getByText('Updating results...')).toHaveAttribute('data-visible', 'true');
     expect(screen.getAllByRole('article')).toHaveLength(10);
     expect(
       screen.queryByRole('heading', { name: 'Scanning cleared records...' }),
@@ -204,6 +216,7 @@ describe('approved jobs UI', () => {
     await waitFor(() => {
       expect(jobsRequests(api.requests)).toContain('/api/jobs?q=Engineer&sort=posting-date-desc');
     });
+    expect(screen.getByText('Updating results...')).toHaveAttribute('data-visible', 'false');
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Country' }), 'GB');
 
@@ -226,64 +239,76 @@ describe('approved jobs UI', () => {
     }
   });
 
-  it('keeps the previous count and results visible while an uncached country query is pending', async () => {
-    let resolveFilteredJobs: ((response: typeof fullJobsResponse) => void) | undefined;
-    const filteredJobs = new Promise<typeof fullJobsResponse>((resolve) => {
-      resolveFilteredJobs = resolve;
-    });
-    const api = mockApi({
-      resolveJobs: (url) => (url.includes('country=CA') ? filteredJobs : fullJobsResponse),
-    });
-    const user = userEvent.setup();
-    renderApp();
+  it.each(instantFilterScenarios)(
+    'keeps the previous results visible without flashing the indicator while an uncached %s query is pending',
+    async (_filter, controlName, optionValue, requestUrl) => {
+      let resolveFilteredJobs: ((response: typeof fullJobsResponse) => void) | undefined;
+      const filteredJobs = new Promise<typeof fullJobsResponse>((resolve) => {
+        resolveFilteredJobs = resolve;
+      });
+      const api = mockApi({
+        resolveJobs: (url) => (url === requestUrl ? filteredJobs : fullJobsResponse),
+      });
+      const user = userEvent.setup();
+      renderApp();
 
-    await screen.findAllByRole('article');
+      await screen.findAllByRole('article');
 
-    const resultsStatus = screen.getByRole('status');
+      const resultsStatus = screen.getByRole('status');
 
-    expect(resultsStatus).toHaveTextContent('10 matching jobs');
-    expect(screen.getByText('Cleared records')).toBeVisible();
+      expect(resultsStatus).toHaveTextContent('10 matching jobs');
+      expect(screen.getByText('Cleared records')).toBeVisible();
 
-    const resultsRegion = screen.getByRole('region', { name: 'Approved jobs results' });
-    const results = within(resultsRegion);
+      const updatingIndicator = screen.getByText('Updating results...');
 
-    expect(resultsRegion).toHaveAttribute('aria-busy', 'false');
+      expect(updatingIndicator).toHaveAttribute('data-visible', 'false');
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Country' }), 'CA');
+      const resultsRegion = screen.getByRole('region', { name: 'Approved jobs results' });
+      const results = within(resultsRegion);
 
-    expect(screen.getByRole('status')).toBe(resultsStatus);
-    expect(resultsStatus).toHaveTextContent('10 matching jobs');
-    expect(screen.getByText('Updating matching jobs')).toBeInTheDocument();
-    expect(screen.getByText('Cleared records')).toBeVisible();
-    expect(results.getAllByRole('article')).toHaveLength(10);
-    expect(results.getAllByRole('article')[0]).toBeVisible();
-    expect(
-      screen.queryByRole('heading', { name: 'Scanning cleared records...' }),
-    ).not.toBeInTheDocument();
-    expect(resultsRegion).toHaveAttribute('aria-busy', 'true');
+      expect(resultsRegion).toHaveAttribute('aria-busy', 'false');
 
-    await waitFor(() => {
-      expect(jobsRequests(api.requests)).toContain('/api/jobs?country=CA&sort=posting-date-desc');
-    });
+      await user.selectOptions(screen.getByRole('combobox', { name: controlName }), optionValue);
 
-    expect(screen.getByRole('status')).toBe(resultsStatus);
-    expect(resultsStatus).toHaveTextContent('10 matching jobs');
-    expect(screen.getByText('Updating matching jobs')).toBeInTheDocument();
-    expect(results.getAllByRole('article')).toHaveLength(10);
-    expect(resultsRegion).toHaveAttribute('aria-busy', 'true');
+      expect(screen.getByRole('status')).toBe(resultsStatus);
+      expect(resultsStatus).toHaveTextContent('10 matching jobs');
+      expect(screen.getByText('Updating matching jobs')).toBeInTheDocument();
+      expect(updatingIndicator).toHaveAttribute('data-visible', 'false');
+      expect(screen.getByText('Cleared records')).toBeVisible();
+      expect(results.getAllByRole('article')).toHaveLength(10);
+      expect(results.getAllByRole('article')[0]).toBeVisible();
+      expect(
+        screen.queryByRole('heading', { name: 'Scanning cleared records...' }),
+      ).not.toBeInTheDocument();
+      expect(resultsRegion).toHaveAttribute('aria-busy', 'true');
 
-    if (resolveFilteredJobs === undefined) {
-      throw new Error('Filtered jobs request did not start.');
-    }
+      await waitFor(() => {
+        expect(jobsRequests(api.requests)).toContain(requestUrl);
+      });
 
-    resolveFilteredJobs({ items: [hourlyJob], total: 1 });
+      expect(screen.getByRole('status')).toBe(resultsStatus);
+      expect(resultsStatus).toHaveTextContent('10 matching jobs');
+      expect(screen.getByText('Updating matching jobs')).toBeInTheDocument();
+      expect(updatingIndicator).toHaveAttribute('data-visible', 'false');
+      expect(results.getAllByRole('article')).toHaveLength(10);
+      expect(resultsRegion).toHaveAttribute('aria-busy', 'true');
 
-    expect(await results.findByRole('article', { name: 'Hourly Systems Engineer' })).toBeVisible();
-    expect(screen.getByRole('status')).toBe(resultsStatus);
-    expect(resultsStatus).toHaveTextContent('1 matching job');
-    expect(screen.queryByText('Updating matching jobs')).not.toBeInTheDocument();
-    expect(resultsRegion).toHaveAttribute('aria-busy', 'false');
-  });
+      if (resolveFilteredJobs === undefined) {
+        throw new Error('Filtered jobs request did not start.');
+      }
+
+      resolveFilteredJobs({ items: [hourlyJob], total: 1 });
+
+      expect(
+        await results.findByRole('article', { name: 'Hourly Systems Engineer' }),
+      ).toBeVisible();
+      expect(screen.getByRole('status')).toBe(resultsStatus);
+      expect(resultsStatus).toHaveTextContent('1 matching job');
+      expect(screen.queryByText('Updating matching jobs')).not.toBeInTheDocument();
+      expect(updatingIndicator).toHaveAttribute('data-visible', 'false');
+      expect(resultsRegion).toHaveAttribute('aria-busy', 'false');
+    },
+  );
 
   it.each(countryScenarios)(
     'sends %s as country=%s and renders %i records',

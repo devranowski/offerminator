@@ -27,6 +27,7 @@ interface EmptyStateProps {
 
 interface ResultsHeadingProps {
   readonly isUpdating: boolean;
+  readonly showUpdatingIndicator: boolean;
   readonly total: number;
 }
 
@@ -60,8 +61,8 @@ function ApprovedJobsView() {
     placeholderData: keepPreviousData,
   });
 
-  const isUpdatingResults =
-    titleQuery.trim() !== debouncedTitleQuery || jobsQuery.isPlaceholderData;
+  const isTitleDebouncing = titleQuery.trim() !== debouncedTitleQuery;
+  const isUpdatingResults = isTitleDebouncing || jobsQuery.isPlaceholderData;
 
   function clearFilters(): void {
     setTitleQuery('');
@@ -108,7 +109,11 @@ function ApprovedJobsView() {
         onSortChange={setSort}
         onTitleChange={setTitleQuery}
       />
-      <ResultsHeading isUpdating={isUpdatingResults} total={jobsQuery.data.total} />
+      <ResultsHeading
+        isUpdating={isUpdatingResults}
+        showUpdatingIndicator={isTitleDebouncing}
+        total={jobsQuery.data.total}
+      />
       <section aria-label="Approved jobs results" aria-busy={isUpdatingResults}>
         {settledResults}
       </section>
@@ -116,13 +121,22 @@ function ApprovedJobsView() {
   );
 }
 
-function ResultsHeading({ isUpdating, total }: ResultsHeadingProps) {
+function ResultsHeading({ isUpdating, showUpdatingIndicator, total }: ResultsHeadingProps) {
   return (
     <div className={styles.resultsHeading}>
       <p role="status" aria-live="polite" aria-atomic="true">
         <strong>{total}</strong> {total === 1 ? 'matching job' : 'matching jobs'}
       </p>
-      <span>Cleared records</span>
+      <div className={styles.resultsMeta}>
+        <span
+          className={styles.updatingIndicator}
+          data-visible={showUpdatingIndicator}
+          aria-hidden="true"
+        >
+          Updating results...
+        </span>
+        <span>Cleared records</span>
+      </div>
       <span className={styles.visuallyHidden} aria-live="polite" aria-atomic="true">
         {isUpdating ? 'Updating matching jobs' : ''}
       </span>

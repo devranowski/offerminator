@@ -100,6 +100,24 @@
   text-transform: uppercase;
 }
 
+.resultsMeta {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 100%;
+  gap: var(--space-1) var(--space-3);
+  align-items: baseline;
+}
+
+.updatingIndicator {
+  visibility: hidden;
+  color: var(--color-cleared);
+  font-weight: 600;
+}
+
+.updatingIndicator[data-visible='true'] {
+  visibility: visible;
+}
+
 .jobList {
   display: grid;
   gap: 0.625rem;
