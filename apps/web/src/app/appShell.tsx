@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { IngestionSummaryDto } from '@offerminator/api-contracts';
 
+import offerminatorMarkUrl from '../assets/offerminatorMark.svg';
 import type { StatusTab } from '../components/statusTabs.js';
 import { StatusTabs } from '../components/statusTabs.js';
 import styles from './appShell.module.css';
@@ -50,9 +51,12 @@ function AppShell({
     <div className={styles.offerminator} data-view={activeTab}>
       <div className={styles.appShell}>
         <header className={styles.siteHeader}>
-          <div>
-            <p className={styles.productName}>Offerminator</p>
-            <p className={styles.tagline}>Come with me… if you want to get hired.</p>
+          <div className={styles.brandLockup}>
+            <img alt="" className={styles.brandMark} src={offerminatorMarkUrl} />
+            <div className={styles.brandCopy}>
+              <p className={styles.productName}>Offerminator</p>
+              <p className={styles.tagline}>Come with me… if you want to get hired.</p>
+            </div>
           </div>
           <p className={styles.systemLabel}>CYBERDYNE / MODEL 101</p>
         </header>

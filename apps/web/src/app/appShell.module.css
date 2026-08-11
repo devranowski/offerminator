@@ -34,9 +34,22 @@
   background: var(--color-terminated);
 }
 
-.siteHeader > div {
+.brandLockup {
+  display: flex;
   min-width: 0;
   max-width: 100%;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.brandCopy {
+  min-width: 0;
+}
+
+.brandMark {
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: none;
 }
 
 .productName,
