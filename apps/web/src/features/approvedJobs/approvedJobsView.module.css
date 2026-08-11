@@ -66,6 +66,13 @@
   background-repeat: no-repeat;
 }
 
+@media (forced-colors: active) {
+  .field select {
+    appearance: auto;
+    background-image: none;
+  }
+}
+
 .resultsHeading {
   display: flex;
   flex-direction: column;

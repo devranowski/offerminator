@@ -20,6 +20,7 @@ interface BreakpointDefinition {
 
 const SOURCE_ROOT = fileURLToPath(new URL('../src/', import.meta.url));
 const BREAKPOINTS_PATH = 'styles/breakpoints.css';
+const FORCED_COLORS_MEDIA_CONDITION = '(forced-colors: active)';
 
 describe('responsive CSS contract', () => {
   it('keeps increasing mobile-first breakpoints in one named source', async () => {
@@ -61,6 +62,10 @@ describe('responsive CSS contract', () => {
       expect(source.contents).not.toMatch(/@media\s*\([^)]*\b(?:min|max)-width\s*:/u);
 
       for (const condition of readMediaConditions(source.contents)) {
+        if (condition === FORCED_COLORS_MEDIA_CONDITION) {
+          continue;
+        }
+
         expect(condition).toMatch(/^\(--viewport-[a-z-]+\)$/u);
         expect(definedNames.has(readCustomMediaName(condition))).toBe(true);
       }
