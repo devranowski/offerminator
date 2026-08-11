@@ -57,7 +57,12 @@ beforeAll(async () => {
   const approvedJobs = new InMemoryApprovedJobRepository();
   const ingestionService = new IngestionService({
     sourceLoader: new FileSystemJobSourceLoader(),
-    sourcePaths: [fileURLToPath(new URL('../../../../data/jobs.json', import.meta.url))],
+    sources: [
+      {
+        sourceId: 'jobs.json',
+        path: fileURLToPath(new URL('../../../../data/jobs.json', import.meta.url)),
+      },
+    ],
     approvalPolicy: new ApprovalPolicy({
       rules: approvalRules,
       currencyConverter: new FixedRateCurrencyConverter(USD_CENTS_PER_CURRENCY_UNIT),

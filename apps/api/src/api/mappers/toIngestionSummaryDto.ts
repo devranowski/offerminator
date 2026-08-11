@@ -11,12 +11,14 @@ function toIngestionSummaryDto(summary: IngestionSummary): IngestionSummaryDto {
     approved: summary.approved,
     rejected: summary.rejected,
     sources: summary.sources.map((source) => ({
+      sourceId: source.sourceId,
       name: source.name,
       totalRecords: source.totalRecords,
       approved: source.approved,
       rejected: source.rejected,
     })),
     sourceErrors: summary.sourceErrors.map((error) => ({
+      sourceId: error.sourceId,
       source: error.source,
       code: error.code,
       message: error.message,

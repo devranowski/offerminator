@@ -87,6 +87,7 @@ function requiredUsdCents(amount: number, currency: string): number {
 function createCandidate(countryValue: 'US' | 'GB'): NormalizedJobCandidate {
   return {
     id: 'test:0',
+    sourceId: 'test',
     source: 'test',
     sourceIndex: 0,
     title: 'Test job',

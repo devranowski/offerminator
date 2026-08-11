@@ -68,6 +68,7 @@ export class ApprovalPolicy {
 function toRawJobEnvelope(job: NormalizedJobCandidate): RawJobEnvelope {
   return {
     id: job.id,
+    sourceId: job.sourceId,
     source: job.source,
     sourceIndex: job.sourceIndex,
     payload: job.raw,

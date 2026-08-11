@@ -83,6 +83,7 @@ describe('API DTO mappers', () => {
     };
     const job: RejectedJob = {
       id: 'jobs.json:19',
+      sourceId: 'jobs.json',
       source: 'jobs.json',
       sourceIndex: 19,
       title: null,
@@ -110,6 +111,7 @@ describe('API DTO mappers', () => {
 
     expect(dto).toEqual({
       id: 'jobs.json:19',
+      sourceId: 'jobs.json',
       title: null,
       company: 'OpsFlex',
       source: 'jobs.json',
@@ -138,6 +140,7 @@ describe('API DTO mappers', () => {
       rejected: 10,
       sources: [
         {
+          sourceId: 'jobs.json',
           name: 'jobs.json',
           totalRecords: 20,
           approved: 10,
@@ -146,6 +149,7 @@ describe('API DTO mappers', () => {
       ],
       sourceErrors: [
         {
+          sourceId: 'broken-feed',
           source: 'broken.json',
           code: 'INVALID_JSON',
           message: 'Source file does not contain valid JSON.',

@@ -65,7 +65,7 @@ describe('full ingestion pipeline', () => {
     const loadSources = vi.spyOn(sourceLoader, 'loadSources');
     const service = new IngestionService({
       sourceLoader,
-      sourcePaths: [fixturePath],
+      sources: [{ sourceId: 'jobs.json', path: fixturePath }],
       approvalPolicy: new ApprovalPolicy({
         rules: approvalRules,
         currencyConverter: new FixedRateCurrencyConverter(USD_CENTS_PER_CURRENCY_UNIT),
@@ -89,6 +89,7 @@ describe('full ingestion pipeline', () => {
       rejected: 10,
       sources: [
         {
+          sourceId: 'jobs.json',
           name: 'jobs.json',
           totalRecords: 20,
           approved: 10,
@@ -139,6 +140,7 @@ describe('full ingestion pipeline', () => {
     expect(logger.events.find((event) => event.sourceIndex === 19)).toEqual({
       event: 'job_rejected',
       jobId: 'jobs.json:19',
+      sourceId: 'jobs.json',
       source: 'jobs.json',
       sourceIndex: 19,
       reasonCodes: [

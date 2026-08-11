@@ -27,6 +27,7 @@ describe('normalizeJob', () => {
 
     expect(candidate).toMatchObject({
       id: 'jobs.json:0',
+      sourceId: 'jobs.json',
       source: 'jobs.json',
       sourceIndex: 0,
       title: 'Hybrid Job',
@@ -121,6 +122,7 @@ describe('normalizeJob', () => {
 function createEnvelope(payload: unknown): RawJobEnvelope {
   return {
     id: 'jobs.json:0',
+    sourceId: 'jobs.json',
     source: 'jobs.json',
     sourceIndex: 0,
     payload,

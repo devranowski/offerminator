@@ -10,15 +10,20 @@ import { InMemoryApprovedJobRepository } from '../storage/inMemoryApprovedJobRep
 import { InMemoryRejectedJobRepository } from '../storage/inMemoryRejectedJobRepository.js';
 import { IngestionService } from './ingestionService.js';
 import type { JobRejectedLogEvent, JobRejectionLogger } from './jobRejectionLogger.js';
-import type { JobSourceLoader, SourceLoadResult } from './jobSourceLoader.js';
+import {
+  FileSystemJobSourceLoader,
+  type ConfiguredJobSource,
+  type JobSourceLoader,
+  type SourceLoadResult,
+} from './jobSourceLoader.js';
 
 class StaticJobSourceLoader implements JobSourceLoader {
-  readonly loadedPaths: string[][] = [];
+  readonly loadedSources: ConfiguredJobSource[][] = [];
 
   constructor(private readonly results: readonly SourceLoadResult[]) {}
 
-  loadSources(paths: readonly string[]): Promise<readonly SourceLoadResult[]> {
-    this.loadedPaths.push([...paths]);
+  loadSources(sources: readonly ConfiguredJobSource[]): Promise<readonly SourceLoadResult[]> {
+    this.loadedSources.push(sources.map((source) => ({ ...source })));
     return Promise.resolve(this.results);
   }
 }
@@ -39,16 +44,22 @@ describe('IngestionService', () => {
       employment_type: 'Contract',
       posting_date: 'not-a-date',
     });
-    const configuredPaths = ['/input/jobs.json', '/input/broken.json', '/input/extra.json'];
+    const configuredSources = [
+      { sourceId: 'jobs.json', path: '/input/jobs.json' },
+      { sourceId: 'broken.json', path: '/input/broken.json' },
+      { sourceId: 'extra.json', path: '/input/extra.json' },
+    ];
     const sourceLoader = new StaticJobSourceLoader([
       {
         ok: true,
+        sourceId: 'jobs.json',
         source: 'jobs.json',
         records: [approvedRecord, null, rejectedRecord],
       },
       {
         ok: false,
         error: {
+          sourceId: 'broken.json',
           source: 'broken.json',
           code: 'INVALID_JSON',
           message: 'Source file does not contain valid JSON.',
@@ -56,6 +67,7 @@ describe('IngestionService', () => {
       },
       {
         ok: true,
+        sourceId: 'extra.json',
         source: 'extra.json',
         records: [createRawJob({ title: 'Extra One' }), createRawJob({ title: 'Extra Two' })],
       },
@@ -65,21 +77,25 @@ describe('IngestionService', () => {
     const logger = new RecordingJobRejectionLogger();
     const service = new IngestionService({
       sourceLoader,
-      sourcePaths: configuredPaths,
+      sources: configuredSources,
       approvalPolicy: createApprovalPolicy(),
       approvedJobs,
       rejectedJobs,
       logger,
     });
 
-    configuredPaths.push('/input/added-too-late.json');
+    configuredSources.push({ sourceId: 'late.json', path: '/input/added-too-late.json' });
 
     expect(service.getLastSummary()).toBeNull();
 
     const summary = await service.ingestConfiguredSources();
 
-    expect(sourceLoader.loadedPaths).toEqual([
-      ['/input/jobs.json', '/input/broken.json', '/input/extra.json'],
+    expect(sourceLoader.loadedSources).toEqual([
+      [
+        { sourceId: 'jobs.json', path: '/input/jobs.json' },
+        { sourceId: 'broken.json', path: '/input/broken.json' },
+        { sourceId: 'extra.json', path: '/input/extra.json' },
+      ],
     ]);
     expect(summary).toEqual({
       totalSources: 3,
@@ -90,12 +106,14 @@ describe('IngestionService', () => {
       rejected: 2,
       sources: [
         {
+          sourceId: 'jobs.json',
           name: 'jobs.json',
           totalRecords: 3,
           approved: 1,
           rejected: 2,
         },
         {
+          sourceId: 'extra.json',
           name: 'extra.json',
           totalRecords: 2,
           approved: 2,
@@ -104,6 +122,7 @@ describe('IngestionService', () => {
       ],
       sourceErrors: [
         {
+          sourceId: 'broken.json',
           source: 'broken.json',
           code: 'INVALID_JSON',
           message: 'Source file does not contain valid JSON.',
@@ -118,6 +137,7 @@ describe('IngestionService', () => {
     expect(storedRejectedJobs).toHaveLength(2);
     expect(storedRejectedJobs[0]).toEqual({
       id: 'jobs.json:1',
+      sourceId: 'jobs.json',
       source: 'jobs.json',
       sourceIndex: 1,
       title: null,
@@ -134,6 +154,7 @@ describe('IngestionService', () => {
     });
     expect(storedRejectedJobs[1]).toMatchObject({
       id: 'jobs.json:2',
+      sourceId: 'jobs.json',
       sourceIndex: 2,
       title: 'Backend Engineer',
       company: 'Example Company',
@@ -148,6 +169,116 @@ describe('IngestionService', () => {
     ]);
   });
 
+  it('keeps same-basename sources distinct through record IDs, summaries, and logs', async () => {
+    const recordsByPath = new Map([
+      [
+        '/feeds/alpha/jobs.json',
+        JSON.stringify([createRawJob({ employment_type: 'Contract', title: 'Alpha' })]),
+      ],
+      [
+        '/feeds/beta/jobs.json',
+        JSON.stringify([createRawJob({ employment_type: 'Contract', title: 'Beta' })]),
+      ],
+    ]);
+    const sourceLoader = new FileSystemJobSourceLoader((path) => {
+      const records = recordsByPath.get(path);
+
+      return records === undefined
+        ? Promise.reject(new Error(`Unexpected source path: ${path}`))
+        : Promise.resolve(records);
+    });
+    const rejectedJobs = new InMemoryRejectedJobRepository();
+    const logger = new RecordingJobRejectionLogger();
+    const service = new IngestionService({
+      sourceLoader,
+      sources: [
+        { sourceId: 'alpha-feed', path: '/feeds/alpha/jobs.json' },
+        { sourceId: 'beta-feed', path: '/feeds/beta/jobs.json' },
+      ],
+      approvalPolicy: createApprovalPolicy(),
+      approvedJobs: new InMemoryApprovedJobRepository(),
+      rejectedJobs,
+      logger,
+    });
+
+    const summary = await service.ingestConfiguredSources();
+
+    expect(summary.sources).toEqual([
+      {
+        sourceId: 'alpha-feed',
+        name: 'jobs.json',
+        totalRecords: 1,
+        approved: 0,
+        rejected: 1,
+      },
+      {
+        sourceId: 'beta-feed',
+        name: 'jobs.json',
+        totalRecords: 1,
+        approved: 0,
+        rejected: 1,
+      },
+    ]);
+    await expect(rejectedJobs.findAll()).resolves.toMatchObject([
+      { id: 'alpha-feed:0', sourceId: 'alpha-feed', source: 'jobs.json', sourceIndex: 0 },
+      { id: 'beta-feed:0', sourceId: 'beta-feed', source: 'jobs.json', sourceIndex: 0 },
+    ]);
+    expect(logger.events).toMatchObject([
+      {
+        jobId: 'alpha-feed:0',
+        sourceId: 'alpha-feed',
+        source: 'jobs.json',
+        sourceIndex: 0,
+      },
+      {
+        jobId: 'beta-feed:0',
+        sourceId: 'beta-feed',
+        source: 'jobs.json',
+        sourceIndex: 0,
+      },
+    ]);
+  });
+
+  it('rejects duplicate configured source IDs before loader I/O', () => {
+    const sourceLoader = new StaticJobSourceLoader([]);
+
+    expect(
+      () =>
+        new IngestionService({
+          sourceLoader,
+          sources: [
+            { sourceId: 'duplicate-feed', path: '/feeds/alpha/jobs.json' },
+            { sourceId: 'duplicate-feed', path: '/feeds/beta/jobs.json' },
+          ],
+          approvalPolicy: createApprovalPolicy(),
+          approvedJobs: new InMemoryApprovedJobRepository(),
+          rejectedJobs: new InMemoryRejectedJobRepository(),
+          logger: new RecordingJobRejectionLogger(),
+        }),
+    ).toThrow('Duplicate configured source ID "duplicate-feed".');
+    expect(sourceLoader.loadedSources).toEqual([]);
+  });
+
+  it.each(['', '   ', ' padded', 'padded '])(
+    'rejects non-trimmed or empty configured source ID %j before loader I/O',
+    (sourceId) => {
+      const sourceLoader = new StaticJobSourceLoader([]);
+
+      expect(
+        () =>
+          new IngestionService({
+            sourceLoader,
+            sources: [{ sourceId, path: '/feeds/jobs.json' }],
+            approvalPolicy: createApprovalPolicy(),
+            approvedJobs: new InMemoryApprovedJobRepository(),
+            rejectedJobs: new InMemoryRejectedJobRepository(),
+            logger: new RecordingJobRejectionLogger(),
+          }),
+      ).toThrow('Configured source ID must be a non-empty trimmed string.');
+      expect(sourceLoader.loadedSources).toEqual([]);
+    },
+  );
+
   it('turns an unexpected record exception into PROCESSING_ERROR and continues the batch', async () => {
     const processingError = new Error('Synthetic approval failure.');
     const failingRecord = createRawJob({
@@ -158,6 +289,7 @@ describe('IngestionService', () => {
     const sourceLoader = new StaticJobSourceLoader([
       {
         ok: true,
+        sourceId: 'synthetic.json',
         source: 'synthetic.json',
         records: [failingRecord, createRawJob({ title: 'Still Processed' })],
       },
@@ -168,7 +300,7 @@ describe('IngestionService', () => {
     const logger = new RecordingJobRejectionLogger();
     const service = new IngestionService({
       sourceLoader,
-      sourcePaths: ['/input/synthetic.json'],
+      sources: [{ sourceId: 'synthetic.json', path: '/input/synthetic.json' }],
       approvalPolicy: {
         evaluate: (candidate) => {
           if (candidate.sourceIndex === 0) {
@@ -194,6 +326,7 @@ describe('IngestionService', () => {
     expect(storedRejectedJobs).toEqual([
       {
         id: 'synthetic.json:0',
+        sourceId: 'synthetic.json',
         source: 'synthetic.json',
         sourceIndex: 0,
         title: 'Exploding Job',
@@ -223,6 +356,7 @@ describe('IngestionService', () => {
       {
         event: 'job_rejected',
         jobId: 'synthetic.json:0',
+        sourceId: 'synthetic.json',
         source: 'synthetic.json',
         sourceIndex: 0,
         reasonCodes: ['PROCESSING_ERROR'],
@@ -245,11 +379,12 @@ describe('IngestionService', () => {
       sourceLoader: new StaticJobSourceLoader([
         {
           ok: true,
+          sourceId: 'ordered.json',
           source: 'ordered.json',
           records: [createRawJob({ title: 'First' }), createRawJob({ title: 'Second' })],
         },
       ]),
-      sourcePaths: ['/input/ordered.json'],
+      sources: [{ sourceId: 'ordered.json', path: '/input/ordered.json' }],
       approvalPolicy: createApprovalPolicy(),
       approvedJobs,
       rejectedJobs: new InMemoryRejectedJobRepository(),
@@ -270,6 +405,7 @@ describe('IngestionService', () => {
     const sourceLoader = new StaticJobSourceLoader([
       {
         ok: true,
+        sourceId: 'concurrent.json',
         source: 'concurrent.json',
         records: [createRawJob(), createRawJob({ employment_type: 'Contract' })],
       },
@@ -279,7 +415,7 @@ describe('IngestionService', () => {
     const logger = new RecordingJobRejectionLogger();
     const service = new IngestionService({
       sourceLoader,
-      sourcePaths: ['/input/configured.json'],
+      sources: [{ sourceId: 'concurrent.json', path: '/input/configured.json' }],
       approvalPolicy: createApprovalPolicy(),
       approvedJobs,
       rejectedJobs,
@@ -307,7 +443,9 @@ describe('IngestionService', () => {
       throw new Error('Expected the first concurrent ingestion call to succeed.');
     }
 
-    expect(sourceLoader.loadedPaths).toEqual([['/input/configured.json']]);
+    expect(sourceLoader.loadedSources).toEqual([
+      [{ sourceId: 'concurrent.json', path: '/input/configured.json' }],
+    ]);
     await expect(approvedJobs.findAll()).resolves.toHaveLength(1);
     await expect(rejectedJobs.findAll()).resolves.toHaveLength(1);
     expect(logger.events.map((event) => event.reasonCodes)).toEqual([
@@ -333,6 +471,7 @@ describe('IngestionService', () => {
     const sourceLoader = new StaticJobSourceLoader([
       {
         ok: true,
+        sourceId: 'storage.json',
         source: 'storage.json',
         records: [createRawJob(), createRawJob()],
       },
@@ -340,7 +479,7 @@ describe('IngestionService', () => {
     const logger = new RecordingJobRejectionLogger();
     const service = new IngestionService({
       sourceLoader,
-      sourcePaths: ['/input/storage.json'],
+      sources: [{ sourceId: 'storage.json', path: '/input/storage.json' }],
       approvalPolicy: createApprovalPolicy(),
       approvedJobs,
       rejectedJobs: new InMemoryRejectedJobRepository(),
@@ -352,7 +491,9 @@ describe('IngestionService', () => {
       'Ingestion has already been started for this service instance.',
     );
 
-    expect(sourceLoader.loadedPaths).toEqual([['/input/storage.json']]);
+    expect(sourceLoader.loadedSources).toEqual([
+      [{ sourceId: 'storage.json', path: '/input/storage.json' }],
+    ]);
     expect(savedJobIds).toEqual(['storage.json:0']);
     expect(logger.events).toEqual([]);
     expect(service.getLastSummary()).toBeNull();
@@ -365,11 +506,12 @@ describe('IngestionService', () => {
       sourceLoader: new StaticJobSourceLoader([
         {
           ok: true,
+          sourceId: 'logging.json',
           source: 'logging.json',
           records: [createRawJob({ employment_type: 'Contract' })],
         },
       ]),
-      sourcePaths: ['/input/logging.json'],
+      sources: [{ sourceId: 'logging.json', path: '/input/logging.json' }],
       approvalPolicy: createApprovalPolicy(),
       approvedJobs: new InMemoryApprovedJobRepository(),
       rejectedJobs,

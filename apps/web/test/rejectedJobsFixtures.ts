@@ -144,6 +144,7 @@ const opsFlexRaw = {
 
 const rejectedJobs: readonly RejectedJobDto[] = rejectedJobRows.map((row) => ({
   id: `jobs.json:${row.sourceIndex}`,
+  sourceId: 'jobs.json',
   title: row.title,
   company: row.company,
   source: 'jobs.json',

@@ -32,7 +32,7 @@ describe('rejected jobs UI', () => {
       const title = job.title ?? 'Untitled job';
       const card = within(panel).getByRole('article', { name: title });
 
-      expect(within(card).getByText(`${job.source}:${String(job.sourceIndex)}`)).toBeVisible();
+      expect(within(card).getByText(`${job.sourceId}:${String(job.sourceIndex)}`)).toBeVisible();
       expect(within(card).getByText('Terminated')).toBeVisible();
       expect(within(card).getByText('Termination reasons')).toBeVisible();
 
@@ -100,6 +100,38 @@ describe('rejected jobs UI', () => {
     expect(details).not.toHaveAttribute('open');
     expect(within(card).getByText('Show raw record')).toBeVisible();
     expect(within(card).queryByLabelText('Raw record for Untitled job')).not.toBeInTheDocument();
+  });
+
+  it('uses the configured source ID when equal file-name labels need disambiguation', async () => {
+    const fixtureJob = fullRejectedJobsResponse.items[0];
+
+    if (fixtureJob === undefined) {
+      throw new Error('Expected at least one rejected job fixture.');
+    }
+
+    mockApi({
+      resolveRejectedJobs: () => ({
+        items: [
+          {
+            ...fixtureJob,
+            id: 'feed a:1',
+            sourceId: 'feed a',
+            source: 'jobs.json',
+            sourceIndex: 1,
+          },
+        ],
+        total: 1,
+      }),
+    });
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('tab', { name: /Terminated/u }));
+
+    const card = await screen.findByRole('article', { name: 'Frontend Developer Intern' });
+
+    expect(within(card).getByText('feed a:1')).toBeVisible();
+    expect(within(card).queryByText('jobs.json:1')).not.toBeInTheDocument();
   });
 
   it('labels a truncated raw preview when its disclosure is open', async () => {

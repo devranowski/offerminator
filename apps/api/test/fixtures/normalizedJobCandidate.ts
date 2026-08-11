@@ -6,6 +6,7 @@ function createNormalizedJobCandidate(
 ): NormalizedJobCandidate {
   return {
     id: 'test:0',
+    sourceId: 'test',
     source: 'test',
     sourceIndex: 0,
     title: 'Backend Engineer',

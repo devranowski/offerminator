@@ -62,6 +62,7 @@ describe('raw job preview', () => {
         items: [
           {
             id: 'synthetic:wide',
+            sourceId: 'synthetic',
             title: null,
             company: null,
             source: 'synthetic.json',

@@ -137,6 +137,7 @@ describe('ApprovalPolicy', () => {
 
     expect(rejectedDecision(decision).raw).toEqual({
       id: candidate.id,
+      sourceId: candidate.sourceId,
       source: candidate.source,
       sourceIndex: candidate.sourceIndex,
       payload: candidate.raw,
@@ -283,6 +284,7 @@ function normalizeFixtureRecord(sourceIndex: number): NormalizedJobCandidate {
   const payload = readFixtureRecord(sourceIndex);
   const envelope: RawJobEnvelope = {
     id: `jobs.json:${sourceIndex}`,
+    sourceId: 'jobs.json',
     source: 'jobs.json',
     sourceIndex,
     payload,

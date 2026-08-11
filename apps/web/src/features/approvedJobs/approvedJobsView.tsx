@@ -25,6 +25,11 @@ interface EmptyStateProps {
   readonly onClearFilters: () => void;
 }
 
+interface ResultsHeadingProps {
+  readonly isUpdating: boolean;
+  readonly total: number;
+}
+
 const DEFAULT_SORT: JobSortDto = 'posting-date-desc';
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -80,6 +85,17 @@ function ApprovedJobsView() {
 
   const jobs = jobsQuery.data.items;
   const isEmpty = jobsQuery.data.total === 0;
+  const settledResults = isEmpty ? (
+    <EmptyState onClearFilters={clearFilters} />
+  ) : (
+    <ul className={styles.jobList}>
+      {jobs.map((job, index) => (
+        <li key={job.id}>
+          <ApprovedJobCard job={job} index={index} />
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
     <>
@@ -92,31 +108,25 @@ function ApprovedJobsView() {
         onSortChange={setSort}
         onTitleChange={setTitleQuery}
       />
-      {isUpdatingResults ? (
-        <ApprovedJobsUpdatingState />
-      ) : (
-        <>
-          <div className={styles.resultsHeading} aria-live="polite">
-            <p>
-              <strong>{jobsQuery.data.total}</strong>{' '}
-              {jobsQuery.data.total === 1 ? 'matching job' : 'matching jobs'}
-            </p>
-            <span>Cleared records</span>
-          </div>
-          {isEmpty ? (
-            <EmptyState onClearFilters={clearFilters} />
-          ) : (
-            <ul className={styles.jobList}>
-              {jobs.map((job, index) => (
-                <li key={job.id}>
-                  <ApprovedJobCard job={job} index={index} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
-      )}
+      <ResultsHeading isUpdating={isUpdatingResults} total={jobsQuery.data.total} />
+      <section aria-label="Approved jobs results" aria-busy={isUpdatingResults}>
+        {settledResults}
+      </section>
     </>
+  );
+}
+
+function ResultsHeading({ isUpdating, total }: ResultsHeadingProps) {
+  return (
+    <div className={styles.resultsHeading}>
+      <p role="status" aria-live="polite" aria-atomic="true">
+        <strong>{total}</strong> {total === 1 ? 'matching job' : 'matching jobs'}
+      </p>
+      <span>Cleared records</span>
+      <span className={styles.visuallyHidden} aria-live="polite" aria-atomic="true">
+        {isUpdating ? 'Updating matching jobs' : ''}
+      </span>
+    </div>
   );
 }
 
@@ -184,21 +194,6 @@ function ApprovedJobsLoadingState() {
       <p className={styles.stateCode}>FEED CONNECTION / IN PROGRESS</p>
       <h2>Scanning job feed...</h2>
       <p>Approved jobs are being loaded.</p>
-      <div className={styles.staticPlaceholders} aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
-    </section>
-  );
-}
-
-function ApprovedJobsUpdatingState() {
-  return (
-    <section className={styles.statePanel} aria-live="polite" aria-busy="true">
-      <p className={styles.stateCode}>FILTER RESULT / UPDATING</p>
-      <h2>Scanning cleared records...</h2>
-      <p>The current filters are being applied.</p>
       <div className={styles.staticPlaceholders} aria-hidden="true">
         <span />
         <span />

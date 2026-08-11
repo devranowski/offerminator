@@ -210,6 +210,7 @@ void approvedJob;
 
 const incompleteCandidate = {
   id: 'jobs.json:19',
+  sourceId: 'jobs.json',
   source: 'jobs.json',
   sourceIndex: 19,
   title: null,

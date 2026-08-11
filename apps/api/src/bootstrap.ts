@@ -41,7 +41,12 @@ function createDependencies(
   const rejectedJobs = new InMemoryRejectedJobRepository();
   const ingestionService = new IngestionService({
     sourceLoader: new FileSystemJobSourceLoader(),
-    sourcePaths: [fileURLToPath(new URL('../../../data/jobs.json', import.meta.url))],
+    sources: [
+      {
+        sourceId: 'jobs.json',
+        path: fileURLToPath(new URL('../../../data/jobs.json', import.meta.url)),
+      },
+    ],
     approvalPolicy,
     approvedJobs,
     rejectedJobs,

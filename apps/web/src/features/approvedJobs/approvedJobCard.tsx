@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { JobDto } from '@offerminator/api-contracts';
 
 import styles from './approvedJobCard.module.css';
@@ -24,18 +25,19 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 });
 
 function ApprovedJobCard({ index, job }: ApprovedJobCardProps) {
+  const titleId = useId();
   const location = formatLocation(job.location);
   const salaryPeriod = job.salary.period === 'annual' ? 'year' : 'hour';
   const showUsdEquivalent = job.salary.currency !== 'USD';
 
   return (
-    <article className={styles.jobCard} aria-labelledby={`${job.id}-title`}>
+    <article className={styles.jobCard} aria-labelledby={titleId}>
       <span className={styles.recordNumber} aria-hidden="true">
         {String(index + 1).padStart(2, '0')}
       </span>
       <header className={styles.jobHeader}>
         <div>
-          <h2 id={`${job.id}-title`} className={styles.jobTitle}>
+          <h2 id={titleId} className={styles.jobTitle}>
             {job.title}
           </h2>
           <p className={styles.jobCompany}>{job.company ?? 'Company unavailable'}</p>

@@ -8,12 +8,12 @@ import type { ApprovedJobRepository } from '../storage/approvedJobRepository.js'
 import type { RejectedJobRepository } from '../storage/rejectedJobRepository.js';
 import type { IngestionSummary, SourceSummary } from './ingestionSummary.js';
 import type { JobRejectionLogger } from './jobRejectionLogger.js';
-import type { JobSourceLoader, SourceError } from './jobSourceLoader.js';
+import type { ConfiguredJobSource, JobSourceLoader, SourceError } from './jobSourceLoader.js';
 import { normalizeJob } from './normalizeJob.js';
 
 export interface IngestionServiceOptions {
   readonly sourceLoader: JobSourceLoader;
-  readonly sourcePaths: readonly string[];
+  readonly sources: readonly ConfiguredJobSource[];
   readonly approvalPolicy: Pick<ApprovalPolicy, 'evaluate'>;
   readonly approvedJobs: ApprovedJobRepository;
   readonly rejectedJobs: RejectedJobRepository;
@@ -23,12 +23,13 @@ export interface IngestionServiceOptions {
 type RecordOutcome = ApprovalDecision['status'];
 
 export class IngestionService {
-  private readonly sourcePaths: readonly string[];
+  private readonly sources: readonly ConfiguredJobSource[];
   private ingestionStarted = false;
   private lastSummary: IngestionSummary | null = null;
 
   constructor(private readonly options: IngestionServiceOptions) {
-    this.sourcePaths = [...options.sourcePaths];
+    this.sources = options.sources.map((source) => ({ ...source }));
+    assertValidSourceIds(this.sources);
   }
 
   async ingestConfiguredSources(): Promise<IngestionSummary> {
@@ -38,7 +39,7 @@ export class IngestionService {
 
     this.ingestionStarted = true;
 
-    const sourceResults = await this.options.sourceLoader.loadSources(this.sourcePaths);
+    const sourceResults = await this.options.sourceLoader.loadSources(this.sources);
     const sources: SourceSummary[] = [];
     const sourceErrors: SourceError[] = [];
 
@@ -48,7 +49,7 @@ export class IngestionService {
         continue;
       }
 
-      sources.push(await this.processSource(result.source, result.records));
+      sources.push(await this.processSource(result.sourceId, result.source, result.records));
     }
 
     const summary: IngestionSummary = {
@@ -71,13 +72,18 @@ export class IngestionService {
     return this.lastSummary;
   }
 
-  private async processSource(source: string, records: readonly unknown[]): Promise<SourceSummary> {
+  private async processSource(
+    sourceId: string,
+    source: string,
+    records: readonly unknown[],
+  ): Promise<SourceSummary> {
     let approved = 0;
     let rejected = 0;
 
     for (const [sourceIndex, payload] of records.entries()) {
       const outcome = await this.processEnvelope({
-        id: `${source}:${sourceIndex}`,
+        id: `${sourceId}:${sourceIndex}`,
+        sourceId,
         source,
         sourceIndex,
         payload,
@@ -91,6 +97,7 @@ export class IngestionService {
     }
 
     return {
+      sourceId,
       name: source,
       totalRecords: records.length,
       approved,
@@ -146,6 +153,7 @@ export class IngestionService {
     await this.options.logger.logJobRejected({
       event: 'job_rejected',
       jobId: job.id,
+      sourceId: job.sourceId,
       source: job.source,
       sourceIndex: job.sourceIndex,
       reasonCodes: job.reasons.map((reason) => reason.code),
@@ -163,6 +171,7 @@ function createRejectedJob(
 ): RejectedJob {
   return {
     id: envelope.id,
+    sourceId: envelope.sourceId,
     source: envelope.source,
     sourceIndex: envelope.sourceIndex,
     title: candidate?.title ?? null,
@@ -171,6 +180,22 @@ function createRejectedJob(
     warnings: candidate?.warnings ?? [],
     raw: envelope.payload,
   };
+}
+
+function assertValidSourceIds(sources: readonly ConfiguredJobSource[]): void {
+  const sourceIds = new Set<string>();
+
+  for (const source of sources) {
+    if (source.sourceId.length === 0 || source.sourceId.trim() !== source.sourceId) {
+      throw new Error('Configured source ID must be a non-empty trimmed string.');
+    }
+
+    if (sourceIds.has(source.sourceId)) {
+      throw new Error(`Duplicate configured source ID "${source.sourceId}".`);
+    }
+
+    sourceIds.add(source.sourceId);
+  }
 }
 
 function sum(

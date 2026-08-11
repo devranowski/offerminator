@@ -35,6 +35,7 @@ export interface RejectionReasonDto {
 
 export interface RejectedJobDto {
   readonly id: string;
+  readonly sourceId: string;
   readonly title: string | null;
   readonly company: string | null;
   readonly source: string;
@@ -60,6 +61,10 @@ const rawJobPreviewMaxKeyLength = 128;
 const rawJobPreviewMaxStringLength = 1_024;
 
 const nonnegativeIntegerSchema = z.number().int().nonnegative();
+const sourceIdSchema = z
+  .string()
+  .min(1)
+  .refine((value) => value.trim() === value, 'Source ID must be trimmed.');
 
 const rejectionCodeSchema = z.enum([
   'INVALID_RECORD_SHAPE',
@@ -83,6 +88,7 @@ const rejectionCodeSchema = z.enum([
 
 const rejectedJobSchema = z.object({
   id: z.string(),
+  sourceId: sourceIdSchema,
   title: z.string().nullable(),
   company: z.string().nullable(),
   source: z.string(),

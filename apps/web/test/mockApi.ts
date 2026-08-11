@@ -13,7 +13,7 @@ type ApiMockOptions =
       readonly failJobsRequests?: number;
       readonly failRejectedJobsRequests?: number;
       readonly failSummaryRequests?: number;
-      readonly resolveJobs?: (url: string) => JobsResponseDto;
+      readonly resolveJobs?: (url: string) => JobsResponseDto | Promise<JobsResponseDto>;
       readonly resolveRejectedJobs?: () => RejectedJobsResponseDto;
     };
 
@@ -55,7 +55,7 @@ function mockApi(options: ApiMockOptions = {}): ApiMock {
         return jsonResponse({ message: 'unavailable' }, 500);
       }
 
-      return jsonResponse(options.resolveJobs?.(url) ?? fullJobsResponse);
+      return jsonResponse((await options.resolveJobs?.(url)) ?? fullJobsResponse);
     }
 
     if (url === '/api/rejected-jobs') {

@@ -182,6 +182,7 @@ const ingestionSummary: IngestionSummaryDto = {
   rejected: 10,
   sources: [
     {
+      sourceId: 'jobs.json',
       name: 'jobs.json',
       totalRecords: 20,
       approved: 10,

@@ -1,4 +1,4 @@
-import { useState, type SyntheticEvent } from 'react';
+import { useId, useState, type SyntheticEvent } from 'react';
 import type { RawJobPreviewDto, RejectedJobDto } from '@offerminator/api-contracts';
 
 import styles from './rejectedJobCard.module.css';
@@ -15,21 +15,23 @@ interface RawDisclosureProps {
 }
 
 function RejectedJobCard({ index, job }: RejectedJobCardProps) {
+  const titleId = useId();
+  const reasonsId = useId();
   const title = job.title ?? 'Untitled job';
 
   return (
-    <article className={styles.rejectionCard} aria-labelledby={`${job.id}-title`}>
+    <article className={styles.rejectionCard} aria-labelledby={titleId}>
       <span className={styles.recordNumber} aria-hidden="true">
         {String(index + 1).padStart(2, '0')}
       </span>
       <header className={styles.rejectionHeader}>
         <div>
-          <h2 id={`${job.id}-title`} className={styles.jobTitle}>
+          <h2 id={titleId} className={styles.jobTitle}>
             {title}
           </h2>
           <p className={styles.jobCompany}>{job.company ?? 'Company unavailable'}</p>
           <code className={styles.sourceReference}>
-            {job.source}:{job.sourceIndex}
+            {job.sourceId}:{job.sourceIndex}
           </code>
         </div>
         <span className={styles.statusMarker}>
@@ -40,8 +42,8 @@ function RejectedJobCard({ index, job }: RejectedJobCardProps) {
         </span>
       </header>
 
-      <section className={styles.reasons} aria-labelledby={`${job.id}-reasons`}>
-        <h3 id={`${job.id}-reasons`}>Termination reasons</h3>
+      <section className={styles.reasons} aria-labelledby={reasonsId}>
+        <h3 id={reasonsId}>Termination reasons</h3>
         <ul className={styles.reasonList}>
           {job.reasons.map((reason, reasonIndex) => (
             <li className={styles.reasonItem} key={`${reason.code}:${reason.field}:${reasonIndex}`}>

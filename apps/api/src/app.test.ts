@@ -261,6 +261,7 @@ describe('Fastify API', () => {
     expect(body.items).toHaveLength(10);
     expect(body.items.find((job) => job.id === 'jobs.json:19')).toEqual({
       id: 'jobs.json:19',
+      sourceId: 'jobs.json',
       title: null,
       company: 'OpsFlex',
       source: 'jobs.json',
@@ -313,6 +314,7 @@ describe('Fastify API', () => {
     const raw: unknown = JSON.parse(json);
     const rejectedJob: RejectedJob = {
       id: 'synthetic:deep',
+      sourceId: 'synthetic',
       source: 'synthetic.json',
       sourceIndex: 0,
       title: null,
@@ -363,6 +365,7 @@ describe('Fastify API', () => {
       rejected: 10,
       sources: [
         {
+          sourceId: 'jobs.json',
           name: 'jobs.json',
           totalRecords: 20,
           approved: 10,

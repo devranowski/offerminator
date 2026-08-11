@@ -3,6 +3,7 @@ import type { RejectionReason } from './rejectionReason.js';
 
 export interface RejectedJob {
   readonly id: string;
+  readonly sourceId: string;
   readonly source: string;
   readonly sourceIndex: number;
   readonly title: string | null;

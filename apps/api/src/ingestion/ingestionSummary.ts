@@ -1,6 +1,7 @@
 import type { SourceError } from './jobSourceLoader.js';
 
 export interface SourceSummary {
+  readonly sourceId: string;
   readonly name: string;
   readonly totalRecords: number;
   readonly approved: number;

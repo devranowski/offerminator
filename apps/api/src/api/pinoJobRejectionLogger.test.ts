@@ -12,6 +12,7 @@ describe('PinoJobRejectionLogger', () => {
     adapter.logJobRejected({
       event: 'job_rejected',
       jobId: 'jobs.json:19',
+      sourceId: 'jobs.json',
       source: 'jobs.json',
       sourceIndex: 19,
       reasonCodes: ['TITLE_MISSING', 'STAFFING_FIRM'],
@@ -21,6 +22,7 @@ describe('PinoJobRejectionLogger', () => {
       {
         event: 'job_rejected',
         jobId: 'jobs.json:19',
+        sourceId: 'jobs.json',
         source: 'jobs.json',
         sourceIndex: 19,
         reasonCodes: ['TITLE_MISSING', 'STAFFING_FIRM'],
@@ -45,6 +47,7 @@ describe('PinoJobRejectionLogger', () => {
     adapter.logJobRejected({
       event: 'job_rejected',
       jobId: 'jobs.json:0',
+      sourceId: 'jobs.json',
       source: 'jobs.json',
       sourceIndex: 0,
       reasonCodes: ['PROCESSING_ERROR'],
@@ -55,6 +58,7 @@ describe('PinoJobRejectionLogger', () => {
       {
         event: 'job_rejected',
         jobId: 'jobs.json:0',
+        sourceId: 'jobs.json',
         source: 'jobs.json',
         sourceIndex: 0,
         reasonCodes: ['PROCESSING_ERROR'],
@@ -96,6 +100,7 @@ describe('PinoJobRejectionLogger', () => {
     adapter.logJobRejected({
       event: 'job_rejected',
       jobId: 'jobs.json:0',
+      sourceId: 'jobs.json',
       source: 'jobs.json',
       sourceIndex: 0,
       reasonCodes: ['PROCESSING_ERROR'],
@@ -106,6 +111,7 @@ describe('PinoJobRejectionLogger', () => {
       {
         event: 'job_rejected',
         jobId: 'jobs.json:0',
+        sourceId: 'jobs.json',
         source: 'jobs.json',
         sourceIndex: 0,
         reasonCodes: ['PROCESSING_ERROR'],
@@ -134,6 +140,7 @@ describe('PinoJobRejectionLogger', () => {
     adapter.logJobRejected({
       event: 'job_rejected',
       jobId: 'jobs.json:0',
+      sourceId: 'jobs.json',
       source: 'jobs.json',
       sourceIndex: 0,
       reasonCodes: ['PROCESSING_ERROR'],
@@ -144,6 +151,7 @@ describe('PinoJobRejectionLogger', () => {
       {
         event: 'job_rejected',
         jobId: 'jobs.json:0',
+        sourceId: 'jobs.json',
         source: 'jobs.json',
         sourceIndex: 0,
         reasonCodes: ['PROCESSING_ERROR'],

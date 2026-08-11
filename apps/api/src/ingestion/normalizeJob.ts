@@ -26,6 +26,7 @@ function normalizeJob(envelope: RawJobEnvelope): NormalizedJobCandidate | null {
 
   return {
     id: envelope.id,
+    sourceId: envelope.sourceId,
     source: envelope.source,
     sourceIndex: envelope.sourceIndex,
     title: normalizeOptionalString(record['title']),

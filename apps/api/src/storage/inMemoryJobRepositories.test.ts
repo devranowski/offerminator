@@ -63,6 +63,7 @@ function createTestApprovedJob(id: string, title: string): ApprovedJob {
 function createTestRejectedJob(id: string, sourceIndex: number): RejectedJob {
   return {
     id,
+    sourceId: 'test',
     source: 'test.json',
     sourceIndex,
     title: null,

@@ -4,6 +4,7 @@ export type SourceErrorCodeDto =
   'FILE_NOT_FOUND' | 'INVALID_JSON' | 'ROOT_NOT_ARRAY' | 'READ_ERROR';
 
 export interface SourceSummaryDto {
+  readonly sourceId: string;
   readonly name: string;
   readonly totalRecords: number;
   readonly approved: number;
@@ -11,6 +12,7 @@ export interface SourceSummaryDto {
 }
 
 export interface SourceErrorDto {
+  readonly sourceId: string;
   readonly source: string;
   readonly code: SourceErrorCodeDto;
   readonly message: string;
@@ -28,6 +30,10 @@ export interface IngestionSummaryDto {
 }
 
 const nonnegativeIntegerSchema = z.number().int().nonnegative();
+const sourceIdSchema = z
+  .string()
+  .min(1)
+  .refine((value) => value.trim() === value, 'Source ID must be trimmed.');
 
 const sourceErrorCodeSchema = z.enum([
   'FILE_NOT_FOUND',
@@ -46,6 +52,7 @@ const ingestionSummaryResponseSchema = z.object({
   sources: z
     .array(
       z.object({
+        sourceId: sourceIdSchema,
         name: z.string(),
         totalRecords: nonnegativeIntegerSchema,
         approved: nonnegativeIntegerSchema,
@@ -56,6 +63,7 @@ const ingestionSummaryResponseSchema = z.object({
   sourceErrors: z
     .array(
       z.object({
+        sourceId: sourceIdSchema,
         source: z.string(),
         code: sourceErrorCodeSchema,
         message: z.string(),

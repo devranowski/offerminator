@@ -104,8 +104,8 @@ The API and frontend share response schemas, but not domain objects. Fastify ser
 
 ## Data pipeline
 
-1. `FileSystemJobSourceLoader` reads configured files concurrently and classifies source failures as `FILE_NOT_FOUND`, `INVALID_JSON`, `ROOT_NOT_ARRAY`, or `READ_ERROR`.
-2. Each array element receives a stable envelope containing `source`, zero-based `sourceIndex`, `id`, and the untouched payload.
+1. `FileSystemJobSourceLoader` reads explicitly identified configured files concurrently and classifies source failures as `FILE_NOT_FOUND`, `INVALID_JSON`, `ROOT_NOT_ARRAY`, or `READ_ERROR`.
+2. Each array element receives a stable envelope containing the configured `sourceId`, the file-name label `source`, zero-based `sourceIndex`, an ID built from `sourceId` and the index, and the untouched payload. Distinct configured IDs keep equal file basenames distinguishable without exposing filesystem paths.
 3. `normalizeJob` validates only the top-level record shape, then normalizes strings, location, salary, enums, and posting date independently. The single supplied array deliberately mixes flat, structured, and hybrid representations, so every record can contribute each valid field it contains.
 4. `ApprovalPolicy` creates a fresh `ApprovalContext` for the record and runs all six rules. It aggregates every rejection reason instead of stopping at the first failure.
 5. An approved candidate passes through the `ApprovedJob` factory and is stored in the approved repository. A rejected candidate retains its raw payload, stable reason codes, and normalization warnings in the rejected repository and emits one structured log event.
@@ -157,7 +157,7 @@ The rules return a uniform list of reasons. Salary calculation additionally reco
 - Missing, `undefined`, or blank optional `posting_date` produces `null` without a warning. A non-empty invalid value produces an `INVALID_POSTING_DATE` warning but does not itself reject the job.
 - Posting dates are calendar strings in strict `YYYY-MM-DD` form. They are not converted through `Date`, so timezone cannot change the represented day.
 - Input strings are trimmed; absent, non-string, and blank optional strings normalize to `null`.
-- Source indices are zero-based and become part of IDs such as `jobs.json:19`.
+- Configured source IDs are non-empty, trimmed, and unique within an ingestion. Source indices are zero-based; together they form record IDs such as `jobs.json:19`.
 - The brief's closing reference to "both feeds" is interpreted against the supplied artifact: one JSON array that mixes structured, flat, and hybrid record representations. Bootstrap preserves that unchanged array as one source; the loader itself accepts multiple configured files.
 - TypeScript and Fastify were selected to keep the implementation in a strongly owned stack while providing runtime validation at the I/O boundaries.
 
@@ -312,7 +312,7 @@ In-memory repositories are sufficient for one deterministic startup ingestion an
 
 ### Operational rejection logging
 
-Ordinary rejection events contain the event name, job ID, source, source index, and reason codes. Only technical per-record `PROCESSING_ERROR` events add a controlled `processingError` descriptor:
+Ordinary rejection events contain the event name, job ID, configured source ID, file-name source label, source index, and reason codes. Only technical per-record `PROCESSING_ERROR` events add a controlled `processingError` descriptor:
 
 - an `Error` contributes exactly `name` and `message`;
 - `message` is limited to 1,024 UTF-16 code units; longer messages retain a prefix and end with `… [truncated]` within that limit;
@@ -334,7 +334,7 @@ Shared Zod response contracts prevent the backend and frontend from silently dri
 The existing boundaries allow focused upgrades without rewriting the approval rules:
 
 - replace in-memory repositories with transactional persistence behind the existing repository ports;
-- introduce durable source identities and idempotent upserts before scheduling repeat ingestion;
+- map configured source identities to upstream-stable record keys and idempotent upserts before scheduling repeat ingestion;
 - move ingestion to a job runner or queue, with explicit retry and partial-failure policy;
 - replace fixed FX with a versioned rate provider whose snapshot and effective time are stored with each decision;
 - add pagination and database/index-backed search when the dataset justifies it;
@@ -347,9 +347,8 @@ The existing boundaries allow focused upgrades without rewriting the approval ru
 ## Known limitations
 
 - Location-string parsing is intentionally simple and deterministic. It recognizes selected country aliases and comma-separated segments, but it is not a postal-address parser and cannot infer every international location accurately.
-- A source's public name is `basename(path)`. Two configured paths with the same filename therefore produce colliding envelope IDs and indistinguishable source names in summaries and logs even within one ingestion. The initial single-source configuration is unaffected.
 - Data is stored in memory and disappears on process exit. The application ingests exactly once per service instance and has no hot reload or retry after a partial startup failure.
-- There is no deduplication because the input contract does not provide stable external source IDs.
+- Source identity is explicit application configuration, not an upstream record key. Changing a configured `sourceId` changes the generated record IDs, and there is no deduplication because the input contract does not provide stable external record IDs.
 - FX rates are fixed test values, not live or historically versioned market rates.
 - Search has no pagination or external index; it filters and sorts the complete approved in-memory collection.
 - The processing-error truncation uses JavaScript string slicing over UTF-16 code units. At the exact boundary, a non-BMP character's surrogate pair can be split; the result remains JSON-serializable but a downstream log pipeline may render it differently.
@@ -367,7 +366,7 @@ The browser client calls only relative `/api` paths. Vite proxies them to Fastif
 
 Cleared implements success, loading, error, and empty states, plus an explicit updating state while debounced filters fetch a new result. Terminated is entirely read-only: it exposes every reason and a native `details`/`summary` disclosure for the bounded raw preview, with internal horizontal scrolling and no record-level action.
 
-Visible labels, semantic landmarks, text and glyph status cues, `aria-live`/`aria-busy` states, and `:focus-visible` styling avoid color-only or pointer-only interaction. Cleared and Terminated use automatic-activation tabs with roving `tabIndex`; Left, Right, Home, and End move and activate tabs, while native buttons retain Enter and Space behavior. The raw-record disclosure retains native keyboard semantics.
+Visible labels, semantic landmarks, text and glyph status cues, `aria-live`/`aria-busy` states, and `:focus-visible` styling avoid color-only or pointer-only interaction. Card labelling uses local React IDs rather than domain record IDs, so configured source identifiers cannot invalidate ARIA ID references. Cleared and Terminated use automatic-activation tabs with roving `tabIndex`; Left, Right, Home, and End move and activate tabs, while native buttons retain Enter and Space behavior. The raw-record disclosure retains native keyboard semantics.
 
 Scalable typography, spacing, component dimensions, and mobile-first breakpoints use `rem`, so enlarged browser defaults can influence both content and layout. Deliberate CSS-pixel exceptions are limited to technical hairlines, border/focus thickness, border overlap, and the visually-hidden recipe.
 

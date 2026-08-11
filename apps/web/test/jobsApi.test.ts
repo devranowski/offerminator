@@ -97,6 +97,7 @@ describe('jobs API client response validation', () => {
           items: [
             {
               id: 'jobs.json:19',
+              sourceId: 'jobs.json',
               title: null,
               company: 'OpsFlex',
               source: 'jobs.json',
@@ -134,6 +135,7 @@ describe('jobs API client response validation', () => {
           items: [
             {
               id: 'jobs.json:19',
+              sourceId: 'jobs.json',
               title: null,
               company: 'OpsFlex',
               source: 'jobs.json',

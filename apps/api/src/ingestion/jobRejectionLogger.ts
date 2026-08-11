@@ -3,6 +3,7 @@ import type { RejectionCode } from '../models/rejectionReason.js';
 export interface JobRejectedLogEvent {
   readonly event: 'job_rejected';
   readonly jobId: string;
+  readonly sourceId: string;
   readonly source: string;
   readonly sourceIndex: number;
   readonly reasonCodes: readonly RejectionCode[];

@@ -8,6 +8,7 @@ function toRejectedJobDto(job: RejectedJob): RejectedJobDto {
 
   return {
     id: job.id,
+    sourceId: job.sourceId,
     title: job.title,
     company: job.company,
     source: job.source,

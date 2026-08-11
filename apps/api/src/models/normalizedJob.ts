@@ -6,6 +6,7 @@ import type { Salary } from './salary.js';
 
 export interface NormalizedJobCandidate {
   readonly id: string;
+  readonly sourceId: string;
   readonly source: string;
   readonly sourceIndex: number;
 

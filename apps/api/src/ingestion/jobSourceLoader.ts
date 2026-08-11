@@ -3,7 +3,13 @@ import { basename } from 'node:path';
 
 export type SourceErrorCode = 'FILE_NOT_FOUND' | 'INVALID_JSON' | 'ROOT_NOT_ARRAY' | 'READ_ERROR';
 
+export interface ConfiguredJobSource {
+  readonly sourceId: string;
+  readonly path: string;
+}
+
 export interface SourceError {
+  readonly sourceId: string;
   readonly source: string;
   readonly code: SourceErrorCode;
   readonly message: string;
@@ -12,6 +18,7 @@ export interface SourceError {
 export type SourceLoadResult =
   | {
       readonly ok: true;
+      readonly sourceId: string;
       readonly source: string;
       readonly records: readonly unknown[];
     }
@@ -21,7 +28,7 @@ export type SourceLoadResult =
     };
 
 export interface JobSourceLoader {
-  loadSources(paths: readonly string[]): Promise<readonly SourceLoadResult[]>;
+  loadSources(sources: readonly ConfiguredJobSource[]): Promise<readonly SourceLoadResult[]>;
 }
 
 export type Utf8FileReader = (path: string) => Promise<string>;
@@ -38,18 +45,23 @@ const sourceErrorMessages = {
 export class FileSystemJobSourceLoader implements JobSourceLoader {
   constructor(private readonly readUtf8File: Utf8FileReader = nodeUtf8FileReader) {}
 
-  loadSources(paths: readonly string[]): Promise<readonly SourceLoadResult[]> {
-    return Promise.all(paths.map((path) => this.loadSource(path)));
+  loadSources(sources: readonly ConfiguredJobSource[]): Promise<readonly SourceLoadResult[]> {
+    return Promise.all(sources.map((source) => this.loadSource(source)));
   }
 
-  private async loadSource(path: string): Promise<SourceLoadResult> {
+  private async loadSource(configuredSource: ConfiguredJobSource): Promise<SourceLoadResult> {
+    const { sourceId, path } = configuredSource;
     const source = basename(path);
     let contents: string;
 
     try {
       contents = await this.readUtf8File(path);
     } catch (error: unknown) {
-      return sourceFailure(source, hasErrorCode(error, 'ENOENT') ? 'FILE_NOT_FOUND' : 'READ_ERROR');
+      return sourceFailure(
+        sourceId,
+        source,
+        hasErrorCode(error, 'ENOENT') ? 'FILE_NOT_FOUND' : 'READ_ERROR',
+      );
     }
 
     let parsed: unknown;
@@ -57,19 +69,20 @@ export class FileSystemJobSourceLoader implements JobSourceLoader {
     try {
       parsed = JSON.parse(contents);
     } catch {
-      return sourceFailure(source, 'INVALID_JSON');
+      return sourceFailure(sourceId, source, 'INVALID_JSON');
     }
 
     return Array.isArray(parsed)
-      ? { ok: true, source, records: parsed }
-      : sourceFailure(source, 'ROOT_NOT_ARRAY');
+      ? { ok: true, sourceId, source, records: parsed }
+      : sourceFailure(sourceId, source, 'ROOT_NOT_ARRAY');
   }
 }
 
-function sourceFailure(source: string, code: SourceErrorCode): SourceLoadResult {
+function sourceFailure(sourceId: string, source: string, code: SourceErrorCode): SourceLoadResult {
   return {
     ok: false,
     error: {
+      sourceId,
       source,
       code,
       message: sourceErrorMessages[code],

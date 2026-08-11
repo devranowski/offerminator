@@ -7,14 +7,17 @@ import {
 } from './jobSourceLoader.js';
 
 describe('FileSystemJobSourceLoader', () => {
-  it('loads ordered unknown records and exposes only the source basename', async () => {
+  it('loads ordered unknown records with the configured ID and basename label', async () => {
     const loader = new FileSystemJobSourceLoader(() =>
       Promise.resolve('[{"title":"First"},42,null,"last"]'),
     );
 
-    await expect(loader.loadSources(['/absolute/input/jobs.json'])).resolves.toEqual([
+    await expect(
+      loader.loadSources([{ sourceId: 'primary-feed', path: '/absolute/input/jobs.json' }]),
+    ).resolves.toEqual([
       {
         ok: true,
+        sourceId: 'primary-feed',
         source: 'jobs.json',
         records: [{ title: 'First' }, 42, null, 'last'],
       },
@@ -37,16 +40,22 @@ describe('FileSystemJobSourceLoader', () => {
     const loader = new FileSystemJobSourceLoader(reader);
 
     await expect(
-      loader.loadSources(['/input/first.json', '/input/broken.json', '/input/last.json']),
+      loader.loadSources([
+        { sourceId: 'first', path: '/input/first.json' },
+        { sourceId: 'broken', path: '/input/broken.json' },
+        { sourceId: 'last', path: '/input/last.json' },
+      ]),
     ).resolves.toEqual([
       {
         ok: true,
+        sourceId: 'first',
         source: 'first.json',
         records: [1],
       },
       {
         ok: false,
         error: {
+          sourceId: 'broken',
           source: 'broken.json',
           code: 'INVALID_JSON',
           message: 'Source file does not contain valid JSON.',
@@ -54,6 +63,7 @@ describe('FileSystemJobSourceLoader', () => {
       },
       {
         ok: true,
+        sourceId: 'last',
         source: 'last.json',
         records: [3],
       },
@@ -87,11 +97,14 @@ describe('FileSystemJobSourceLoader', () => {
     readonly reader: Utf8FileReader;
   }>)('maps $name to $expectedCode', async ({ expectedCode, reader }) => {
     const loader = new FileSystemJobSourceLoader(reader);
-    const [result] = await loader.loadSources(['/input/source.json']);
+    const [result] = await loader.loadSources([
+      { sourceId: 'configured-source', path: '/input/source.json' },
+    ]);
 
     expect(result).toMatchObject({
       ok: false,
       error: {
+        sourceId: 'configured-source',
         source: 'source.json',
         code: expectedCode,
       },
