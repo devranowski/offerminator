@@ -50,6 +50,10 @@ function ApprovedJobCard({ index, job }: ApprovedJobCardProps) {
         </span>
       </header>
 
+      <p className={styles.jobDescription}>
+        {job.description ?? <span className={styles.unavailable}>Description unavailable</span>}
+      </p>
+
       <dl className={styles.jobMeta}>
         <div>
           <dt>Location</dt>

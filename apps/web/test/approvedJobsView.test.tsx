@@ -49,6 +49,7 @@ describe('approved jobs UI', () => {
 
     expect(cards).toHaveLength(10);
     expect(screen.getByRole('heading', { name: 'Customer Success Manager' })).toBeVisible();
+    expect(screen.getByText('Help customers onboard.')).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Growth Marketing Manager' })).toBeVisible();
     expect(screen.getByText('Date unavailable')).toBeVisible();
     expect(screen.getByText('GBP 85,000 / year')).toBeVisible();
@@ -75,6 +76,7 @@ describe('approved jobs UI', () => {
 
     expect(await screen.findByRole('heading', { name: 'Null Fields Specialist' })).toBeVisible();
     expect(screen.getByText('Company unavailable')).toBeVisible();
+    expect(screen.getByText('Description unavailable')).toBeVisible();
     expect(screen.getByText('Location unavailable')).toBeVisible();
     expect(screen.getByText('Date unavailable')).toBeVisible();
   });
