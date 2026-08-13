@@ -74,11 +74,11 @@
 }
 
 .resultsHeading {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-1);
+  display: grid;
+  grid-template-areas: 'count label';
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: var(--space-3);
   margin: 0.875rem 0 0.6875rem;
 }
 
@@ -94,21 +94,21 @@
   font-weight: 600;
 }
 
+.resultsHeading p {
+  grid-area: count;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .resultsHeading span {
   font-size: 0.625rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-.resultsMeta {
-  display: flex;
-  flex-wrap: wrap;
-  max-width: 100%;
-  gap: var(--space-1) var(--space-3);
-  align-items: baseline;
-}
-
 .updatingIndicator {
+  grid-area: label;
+  justify-self: end;
   visibility: hidden;
   color: var(--color-cleared);
   font-weight: 600;
@@ -116,6 +116,18 @@
 
 .updatingIndicator[data-visible='true'] {
   visibility: visible;
+}
+
+.updatingIndicator[data-visible='true'] + .recordsLabel {
+  visibility: hidden;
+}
+
+.recordsLabel {
+  grid-area: label;
+  min-width: 0;
+  justify-self: end;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .jobList {
@@ -233,9 +245,17 @@
   }
 
   .resultsHeading {
-    flex-direction: row;
-    align-items: baseline;
-    gap: var(--space-4);
+    grid-template-areas: 'count update label';
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    column-gap: var(--space-3);
+  }
+
+  .updatingIndicator {
+    grid-area: update;
+  }
+
+  .updatingIndicator[data-visible='true'] + .recordsLabel {
+    visibility: visible;
   }
 
   .statePanel,

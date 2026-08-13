@@ -127,16 +127,14 @@ function ResultsHeading({ isUpdating, showUpdatingIndicator, total }: ResultsHea
       <p role="status" aria-live="polite" aria-atomic="true">
         <strong>{total}</strong> {total === 1 ? 'matching job' : 'matching jobs'}
       </p>
-      <div className={styles.resultsMeta}>
-        <span
-          className={styles.updatingIndicator}
-          data-visible={showUpdatingIndicator}
-          aria-hidden="true"
-        >
-          Updating results...
-        </span>
-        <span>Cleared records</span>
-      </div>
+      <span
+        className={styles.updatingIndicator}
+        data-visible={showUpdatingIndicator}
+        aria-hidden="true"
+      >
+        Updating results...
+      </span>
+      <span className={styles.recordsLabel}>Cleared records</span>
       <span className={styles.visuallyHidden} aria-live="polite" aria-atomic="true">
         {isUpdating ? 'Updating matching jobs' : ''}
       </span>
